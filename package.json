@@ -37,7 +37,6 @@
     "@janiscommerce/api-test": "^2.1.0",
     "aws-sdk": "^2.562.0",
     "mime": "^2.4.4",
-    "request": "^2.88.0",
     "uuid": "^3.3.3"
   }
 }
