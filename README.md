@@ -10,11 +10,11 @@ A package to handle JANIS FILE UPLOAD APIs.
 npm install @janiscommerce/sls-api-upload
 ```
 
-## Usage
+## Usage SlsApiUpload Module
 ```js
 'use strict';
 
-const SlsApiUpload = require('@janiscommerce/sls-api-upload');
+const { SlsApiUpload } = require('@janiscommerce/sls-api-upload');
 
 class MyApiUpload extends SlsApiUpload {
 	get bucket() {
@@ -119,4 +119,27 @@ This is use to indicate range of size for the files to upload to s3 in bytes.
 		return [1, 20000000]; // 1byte - 20mb
 	}
 	...
+```
+
+## Usage SlsApiRelation Module
+
+Build you api for relationate file uploaded with some register.
+
+```js
+'use strict';
+
+const { SlsApiRelation } = require('@janiscommerce/sls-api-upload');
+
+class MyApiRelation extends SlsApiRelation {
+	...
+}
+```
+
+Request data example;
+
+```js
+{
+	fileName: 'string',// file.JSON, file.png, etc
+	fileSource: 'string' // files/images/asd546asd.jpg, images/asd546asd.pdf, etc
+}
 ```
