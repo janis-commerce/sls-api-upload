@@ -12,7 +12,10 @@ const S3 = require('../lib/s3');
 describe('S3 Wrapper Test', () => {
 
 	beforeEach(() => {
-		this.s3 = sandbox.stub(s3Wrapper, 'createPresignedPost');
+		this.s3 = sandbox.stub(s3Wrapper, 'createPresignedPost').resolves({
+			url: 'URL',
+			fields: {}
+		});
 	});
 
 	afterEach(() => {
@@ -24,7 +27,7 @@ describe('S3 Wrapper Test', () => {
 			callback(new Error('ERROR'), null);
 		});
 
-		assert.rejects(S3.createPresignedPost({}), {
+		await assert.rejects(S3.createPresignedPost({}), {
 			message: 'ERROR'
 		});
 	});
@@ -39,6 +42,11 @@ describe('S3 Wrapper Test', () => {
 			callback(null, response);
 		});
 
-		await S3.createPresignedPost({});
+		const presignedPost = await S3.createPresignedPost({});
+
+		assert.deepEqual(presignedPost, {
+			url: 'URL',
+			fields: {}
+		});
 	});
 });

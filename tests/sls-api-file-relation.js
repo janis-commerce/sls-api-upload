@@ -6,7 +6,7 @@ const { SlsApiFileRelation } = require('../lib/index');
 
 describe('SlsApiRelation', () => {
 
-	context('test body request', () => {
+	context('test request body', () => {
 
 		const response = { code: 400 };
 
@@ -14,13 +14,17 @@ describe('SlsApiRelation', () => {
 			description: 'should return 400 if request body is missing',
 			response
 		}, {
-			description: 'should return 400 if fileName or fileSource in request body is missing 1',
+			description: 'should return 400 if request body data is empty',
+			response,
+			data: {}
+		}, {
+			description: 'should return 400 if fileSource in request body is missing',
 			request: {
 				data: { fileName: 'test.txt' }
 			},
 			response
 		}, {
-			description: 'should return 400 if fileName or fileSource in request body is missing 2',
+			description: 'should return 400 if fileName in request body is missing',
 			request: {
 				data: { fileSource: 'files/ID.txt' }
 			},
@@ -45,5 +49,19 @@ describe('SlsApiRelation', () => {
 			response
 		}]);
 	});
+
+	class MyApiRelation extends SlsApiFileRelation {
+		process() {}
+	}
+
+	APITest(MyApiRelation, [
+		{
+			description: 'should return 200 if request body is valid',
+			request: {
+				data: { fileName: 'test.txt', fileSource: 'files/ID.txt' }
+			},
+			response: {}
+		}
+	]);
 
 });

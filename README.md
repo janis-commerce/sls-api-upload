@@ -105,7 +105,7 @@ This is used to indicate expiration time for upload file in s3 (in seconds)
 	...
 ```
 
-#### get lengthRange()
+#### get sizeRange()
 
 *Optional*
 
@@ -115,13 +115,13 @@ This is use to indicate range of size for the files to upload to s3 in bytes.
 
 ```js
 	...
-	get lengthRange() {
+	get sizeRange() {
 		return [1, 20000000]; // 1byte - 20mb
 	}
 	...
 ```
 
-## Usage SlsApiRelation Module
+## Usage SlsApiFileRelation Module
 
 Build your API to relate an uploaded file with some record.
 This module validate data automatically. For implement this api is required use `async process()`.
@@ -130,9 +130,9 @@ This module validate data automatically. For implement this api is required use 
 ```js
 'use strict';
 
-const { SlsApiRelation } = require('@janiscommerce/sls-api-upload');
+const { SlsApiFileRelation } = require('@janiscommerce/sls-api-upload');
 
-class MyApiRelation extends SlsApiRelation {
+class MyApiRelation extends SlsApiFileRelation {
 	...
 }
 ```

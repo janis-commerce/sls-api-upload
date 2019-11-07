@@ -1,6 +1,5 @@
 'use strict';
 
-const assert = require('assert');
 const APITest = require('@janiscommerce/api-test');
 const globalSandbox = require('sinon').createSandbox();
 const S3 = require('../lib/s3');
@@ -26,7 +25,7 @@ const apiExtendedWithGetters = (
 	path,
 	availableTypes = [],
 	expiration = 60,
-	lengthRange = [1, 10000000]
+	sizeRange = [1, 10000000]
 ) => {
 	class API extends SlsApiUpload {
 		get bucket() {
@@ -45,8 +44,8 @@ const apiExtendedWithGetters = (
 			return expiration;
 		}
 
-		get lengthRange() {
-			return lengthRange;
+		get sizeRange() {
+			return sizeRange;
 		}
 	}
 
@@ -54,13 +53,17 @@ const apiExtendedWithGetters = (
 };
 
 describe('SlsApiUpload', () => {
-	context('test body request', () => {
+	context('test request body', () => {
 
 		const response = { code: 400 };
 
 		APITest(apiExtendedSimple('test'), [{
 			description: 'should return 400 if request body is missing',
 			response
+		}, {
+			description: 'should return 400 if request body data is empty',
+			response,
+			data: {}
 		}, {
 			description: 'should return 400 if fileName in request body is missing',
 			request: {
@@ -85,25 +88,25 @@ describe('SlsApiUpload', () => {
 	context('test required properties', () => {
 
 		APITest(apiExtendedSimple(), [{
-			description: 'should return 400 if not define bucket',
+			description: 'should return 400 bucket is not defined',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.BUCKET_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({}), [{
-			description: 'should return 400 if pass invalid bucket',
+			description: 'should return 400 if bucket is not a string',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.BUCKET_NOT_STRING } }
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', null), [{
-			description: 'should return 400 if pass invalid path',
+			description: 'should return 400 if path is not a string',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.PATH_NOT_STRING } }
 		}]);
 
 		APITest(apiExtendedSimple('bucket-name'), [{
-			description: 'should return 400 if pass fileName with invalid extension',
+			description: 'should return 400 if fileName has an invalid extension',
 			request: {
 				data: { fileName: 'test.extension' }
 			},
@@ -123,25 +126,25 @@ describe('SlsApiUpload', () => {
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 'test'), [{
-			description: 'should return 400 if pass filename with expiration invalid',
+			description: 'should return 400 if pass filename with invalid expiration',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.EXPIRATION_NOT_NUMBER } }
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, 'test'), [{
-			description: 'should return 400 if pass filename with lengthRange invalid',
+			description: 'should return 400 if pass filename with invalid sizeRange',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.LENGTH_RANGE_NOT_ARRAY } }
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, [1, 'range']), [{
-			description: 'should return 400 if pass filename with lengthRange invalid',
+			description: 'should return 400 if pass filename with invalid sizeRange',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.LENGTH_RANGE_ITEM_NOT_NUMBER } }
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, ['range', 15000]), [{
-			description: 'should return 400 if pass filename with lengthRange invalid',
+			description: 'should return 400 if pass filename with invalid sizeRange',
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.LENGTH_RANGE_ITEM_NOT_NUMBER } }
 		}]);
@@ -149,7 +152,8 @@ describe('SlsApiUpload', () => {
 	});
 
 
-	context('test correct usage', () => {
+	context('Correct usage', () => {
+		const uuidRgx = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}.json$';
 
 		beforeEach(() => {
 			mockS3();
@@ -183,7 +187,7 @@ describe('SlsApiUpload', () => {
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, [1, 20000000]), [{
-			description: 'should return 200 if pass a filename json with lengthRange',
+			description: 'should return 200 if pass a filename json with sizeRange',
 			request: { data: { fileName: 'test.json' } },
 			response: { code: 200 },
 			after: (afterResponse, sandbox) => {
@@ -194,62 +198,86 @@ describe('SlsApiUpload', () => {
 			}
 		}]);
 
+
 		APITest(apiExtendedWithGetters('bucket-name', 'files/'), [{
-			before: sandbox => {
-				sandbox.spy(SlsApiUpload.prototype, 'resolvePath');
-			},
 			description: 'should return 200 if pass filename with path correct',
 			request: { data: { fileName: 'test.json' } },
 			response: { code: 200 },
-			after: () => {
-				const call = SlsApiUpload.prototype.resolvePath.getCall(0);
-
-				assert(call.returnValue === 'files/');
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+					}
+				});
 			}
 		}]);
 
 
-		APITest(apiExtendedWithGetters('bucket-name', '/files'), [{
-			before: sandbox => {
-				sandbox.spy(SlsApiUpload.prototype, 'resolvePath');
-			},
+		APITest(apiExtendedWithGetters('bucket-name', '/files/images'), [{
 			description: 'should return 200 if pass filename with path to resolve',
 			request: { data: { fileName: 'test.json' } },
 			response: { code: 200 },
-			after: () => {
-				const call = SlsApiUpload.prototype.resolvePath.getCall(0);
-
-				assert(call.returnValue === 'files/');
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^files/images/${uuidRgx}`))
+					}
+				});
 			}
 		}]);
 
 		APITest(apiExtendedWithGetters('bucket-name', 'files'), [{
-			before: sandbox => {
-				sandbox.spy(SlsApiUpload.prototype, 'resolvePath');
-			},
 			description: 'should return 200 if pass filename with path to resolve',
 			request: { data: { fileName: 'test.json' } },
 			response: { code: 200 },
-			after: () => {
-				const call = SlsApiUpload.prototype.resolvePath.getCall(0);
-
-				assert(call.returnValue === 'files/');
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+					}
+				});
 			}
 		}]);
 
 		APITest(apiExtendedSimple('bucket-name'), [{
-			before: sandbox => {
-				sandbox.spy(SlsApiUpload.prototype, 'resolvePath');
-			},
 			description: 'should return 200 if pass filename with path empty',
 			request: { data: { fileName: 'test.json' } },
 			response: { code: 200 },
-			after: () => {
-				const call = SlsApiUpload.prototype.resolvePath.getCall(0);
-
-				assert(call.returnValue === '');
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^${uuidRgx}`))
+					}
+				});
 			}
 		}]);
+
+		APITest(apiExtendedSimple('bucket-name'), [
+			{
+				description: 'should pass correct content-type to request with image png file',
+				request: { data: { fileName: 'test.png' } },
+				response: { code: 200 },
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+						Fields: {
+							'Content-Type': 'image/png'
+						}
+					});
+				}
+			},
+			{
+				description: 'should pass correct content-type to request with json file',
+				request: { data: { fileName: 'test.json' } },
+				response: { code: 200 },
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+						Fields: {
+							'Content-Type': 'application/json'
+						}
+					});
+				}
+			}
+		]);
 
 	});
 
