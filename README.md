@@ -79,7 +79,7 @@ This is used to indicate path where save the file
 
 *Default=[]*
 
-This is use to indicate accepted types for upload to s3. Example:
+This is used to indicate accepted types for upload to s3. If you not define availableTypes, all types are valid. Example:
 
 ```js
 	...
@@ -95,7 +95,7 @@ This is use to indicate accepted types for upload to s3. Example:
 
 *Default=60*
 
-This is use to indicate expiration time for upload file in s3.(seconds)
+This is used to indicate expiration time for upload file in s3 (in seconds)
 
 ```js
 	...
@@ -123,7 +123,9 @@ This is use to indicate range of size for the files to upload to s3 in bytes.
 
 ## Usage SlsApiRelation Module
 
-Build you api for relationate file uploaded with some register.
+Build your API to relate an uploaded file with some record.
+This module validate data automatically. For implement this api is required use `async process()`.
+
 
 ```js
 'use strict';
@@ -139,7 +141,11 @@ Request data example;
 
 ```js
 {
-	fileName: 'string',// file.JSON, file.png, etc
-	fileSource: 'string' // files/images/asd546asd.jpg, images/asd546asd.pdf, etc
+	fileName: 'string',
+	fileSource: 'string'
 }
 ```
+
+filename: is a name and extension file. Example: `image.png`
+
+filesSource: is a key generated in s3 for file uploaded. Example: `files/images/adasd5a6sd456.png`
