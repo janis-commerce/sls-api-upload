@@ -3,14 +3,14 @@
 [![Build Status](https://travis-ci.org/janis-commerce/sls-api-upload.svg?branch=master)](https://travis-ci.org/janis-commerce/sls-api-upload)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/sls-api-upload/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/sls-api-upload?branch=master)
 
-A package to handle JANIS FILE UPLOAD APIs.
+A package to handle JANIS file upload APIs.
 
 ## Installation
 ```sh
 npm install @janiscommerce/sls-api-upload
 ```
 
-## Usage SlsApiUpload Module
+## SlsApiUpload
 ```js
 'use strict';
 
@@ -30,8 +30,6 @@ module.exports = MyApiUpload;
 
 ```
 
-### MyApiUpload
-
 Request data example;
 
 ```js
@@ -40,10 +38,10 @@ Request data example;
 }
 ```
 
-The following getters can be used to customize and validate your ApiUpload.
+The following getters can be used to customize and validate your SlsApiUpload.
 
 
-#### get bucket()
+### get bucket()
 
 *Required*
 
@@ -57,7 +55,7 @@ This is used to indicate bucket where save the file.
 	...
 ```
 
-#### get path()
+### get path()
 
 *Optional*
 
@@ -73,7 +71,7 @@ This is used to indicate path where save the file
 	...
 ```
 
-#### get availableTypes()
+### get availableTypes()
 
 *Optional*
 
@@ -89,7 +87,7 @@ This is used to indicate accepted types for upload to s3. If you not define avai
 	...
 ```
 
-#### get expiration()
+### get expiration()
 
 *Optional*
 
@@ -105,13 +103,13 @@ This is used to indicate expiration time for upload file in s3 (in seconds)
 	...
 ```
 
-#### get sizeRange()
+### get sizeRange()
 
 *Optional*
 
 *Default=[1,10000000]*
 
-This is use to indicate range of size for the files to upload to s3 in bytes.
+This is used to indicate range of size for the files to upload to s3 in bytes.
 
 ```js
 	...
@@ -148,4 +146,4 @@ Request data example;
 
 filename: is a name and extension file. Example: `image.png`
 
-filesSource: is a key generated in s3 for file uploaded. Example: `files/images/adasd5a6sd456.png`
+filesSource: is a key generated in s3 for file uploaded. Example: `files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png`
