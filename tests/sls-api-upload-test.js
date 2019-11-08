@@ -24,8 +24,8 @@ const apiExtendedWithGetters = (
 	bucket,
 	path,
 	availableTypes = [],
-	expiration = 60,
-	sizeRange = [1, 10000000]
+	expiration,
+	sizeRange
 ) => {
 	class API extends SlsApiUpload {
 		get bucket() {
@@ -41,11 +41,11 @@ const apiExtendedWithGetters = (
 		}
 
 		get expiration() {
-			return expiration;
+			return expiration || super.expiration;
 		}
 
 		get sizeRange() {
-			return sizeRange;
+			return sizeRange || super.sizeRange;
 		}
 	}
 
@@ -182,6 +182,18 @@ describe('SlsApiUpload', () => {
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
 					Expires: 120
+				});
+			}
+		}]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files'), [{
+			description: 'should return 200 if pass a filename json with default sizeRange',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 },
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Expires: 60,
+					Conditions: [['content-length-range', 1, 10 * 1024 * 1024]]
 				});
 			}
 		}]);
