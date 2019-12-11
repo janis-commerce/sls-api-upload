@@ -35,8 +35,10 @@
   "dependencies": {
     "@janiscommerce/api": "^4.1.1",
     "@janiscommerce/api-test": "^2.1.0",
+    "@janiscommerce/model": "^3.3.3",
     "aws-sdk": "^2.562.0",
     "mime": "^2.4.4",
+    "superstruct": "^0.6.2",
     "uuid": "^3.3.3"
   }
 }

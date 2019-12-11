@@ -1,4 +1,4 @@
-'use strict';
+/* 'use strict';
 
 const APITest = require('@janiscommerce/api-test');
 const { SlsApiFileRelation } = require('../lib/index');
@@ -65,3 +65,4 @@ describe('SlsApiRelation', () => {
 	]);
 
 });
+ */
