@@ -1,8 +1,8 @@
 'use strict';
 
 const APITest = require('@janiscommerce/api-test');
+const S3 = require('@janiscommerce/s3');
 const globalSandbox = require('sinon').createSandbox();
-const S3 = require('../lib/s3');
 const { SlsApiUpload, SlsApiUploadError } = require('../lib/index');
 
 
