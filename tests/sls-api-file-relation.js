@@ -1,7 +1,6 @@
 'use strict';
 
 const mime = require('mime');
-const assert = require('assert');
 const APITest = require('@janiscommerce/api-test');
 const Model = require('@janiscommerce/model');
 const S3 = require('@janiscommerce/s3');
@@ -175,14 +174,6 @@ describe('SlsApiRelation', () => {
 			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 132 } },
 			response: { code: 400 }
 		}]);
-	});
-
-	it('test buildModel method', () => {
-		const ModelBuilded = SlsApiFileRelation.buildModel('table_test', 'database_test');
-		const modelInstance = new ModelBuilded();
-
-		assert(ModelBuilded.table === 'table_test');
-		assert(modelInstance.databaseKey === 'database_test');
 	});
 
 	context('test process', () => {
