@@ -181,7 +181,7 @@ describe('SlsApiRelation', () => {
 		const ModelBuilded = SlsApiFileRelation.buildModel('table_test', 'database_test');
 		const modelInstance = new ModelBuilded();
 
-		assert(modelInstance.table === 'table_test');
+		assert(ModelBuilded.table === 'table_test');
 		assert(modelInstance.databaseKey === 'database_test');
 	});
 
