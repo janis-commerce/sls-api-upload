@@ -13,6 +13,7 @@ describe('test model builder', () => {
 		assert.strictEqual(modelInstance.databaseKey, 'database_test');
 		assert.deepStrictEqual(ModelBuilded.fields, {
 			id: true,
+			path: true,
 			test: true
 		});
 	});
