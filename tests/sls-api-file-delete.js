@@ -1,7 +1,6 @@
 'use strict';
 
 const APITest = require('@janiscommerce/api-test');
-const Model = require('@janiscommerce/model');
 const S3 = require('@janiscommerce/s3');
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileDelete, SlsApiFileDeleteError } = require('../lib/index');
@@ -76,8 +75,8 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').rejects();
-				sandbox.stub(Model.prototype, 'remove');
+				sandbox.stub(BaseModel.prototype, 'get').rejects();
+				sandbox.stub(BaseModel.prototype, 'remove');
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
@@ -87,8 +86,8 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 400 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(Model.prototype.get);
-				sandbox.assert.notCalled(Model.prototype.remove);
+				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.notCalled(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
@@ -98,10 +97,10 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').resolves([{
+				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
 				}]);
-				sandbox.stub(Model.prototype, 'remove').rejects();
+				sandbox.stub(BaseModel.prototype, 'remove').rejects();
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
@@ -111,8 +110,8 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(Model.prototype.get);
-				sandbox.assert.called(Model.prototype.remove);
+				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.called(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
@@ -122,10 +121,10 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').resolves([{
+				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
 				}]);
-				sandbox.stub(Model.prototype, 'remove').resolves(1);
+				sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
 				sandbox.stub(S3, 'deleteObject').rejects();
 			},
 			session: true,
@@ -135,8 +134,8 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(Model.prototype.get);
-				sandbox.assert.called(Model.prototype.remove);
+				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.called(BaseModel.prototype.remove);
 				sandbox.assert.called(S3.deleteObject);
 			}
 		}]);
@@ -146,8 +145,8 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').resolves([]);
-				sandbox.stub(Model.prototype, 'remove');
+				sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+				sandbox.stub(BaseModel.prototype, 'remove');
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
@@ -157,8 +156,8 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 404, body: { message: SlsApiFileDeleteError.messages.FILE_RECORD_NOT_FOUND } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(Model.prototype.get);
-				sandbox.assert.notCalled(Model.prototype.remove);
+				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.notCalled(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
@@ -168,10 +167,10 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').resolves([{
+				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
 				}]);
-				sandbox.stub(Model.prototype, 'remove').resolves(1);
+				sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
 				sandbox.stub(S3, 'deleteObject').resolves();
 			},
 			session: true,
@@ -181,11 +180,11 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 200, body: { id: 1 } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(Model.prototype.get, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }
 				});
 
-				sandbox.assert.calledWithExactly(Model.prototype.remove, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, {
 					filters: { test: 1, id: 2 }
 				});
 
@@ -201,10 +200,10 @@ describe('SlsApiFileDelete', () => {
 			bucket: 'test'
 		}), [{
 			before: sandbox => {
-				sandbox.stub(Model.prototype, 'get').resolves([{
+				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
 				}]);
-				sandbox.stub(Model.prototype, 'remove').resolves(1);
+				sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
 				sandbox.stub(S3, 'deleteObject').rejects({
 					statusCode: 404
 				});
@@ -216,11 +215,11 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 200, body: { id: 1 } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(Model.prototype.get, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }
 				});
 
-				sandbox.assert.calledWithExactly(Model.prototype.remove, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, {
 					filters: { test: 1, id: 2 }
 				});
 

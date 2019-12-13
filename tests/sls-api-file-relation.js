@@ -2,7 +2,6 @@
 
 const mime = require('mime');
 const APITest = require('@janiscommerce/api-test');
-const Model = require('@janiscommerce/model');
 const S3 = require('@janiscommerce/s3');
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
@@ -156,7 +155,7 @@ describe('SlsApiRelation', () => {
 		}), [{
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').rejects();
-				sandbox.stub(Model.prototype, 'insert');
+				sandbox.stub(BaseModel.prototype, 'insert');
 			},
 			session: true,
 			description: 'should return 500 if fail headObject',
@@ -167,7 +166,7 @@ describe('SlsApiRelation', () => {
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.called(S3.headObject);
-				sandbox.assert.notCalled(Model.prototype.insert);
+				sandbox.assert.notCalled(BaseModel.prototype.insert);
 			}
 		}]);
 
@@ -181,7 +180,7 @@ describe('SlsApiRelation', () => {
 					ContentType: 'image/png',
 					ContentLength: 10000
 				});
-				sandbox.stub(Model.prototype, 'insert').rejects();
+				sandbox.stub(BaseModel.prototype, 'insert').rejects();
 			},
 			session: true,
 			description: 'should return 500 if fail model insert',
@@ -191,7 +190,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(Model.prototype.insert);
+				sandbox.assert.called(BaseModel.prototype.insert);
 				sandbox.assert.called(S3.headObject);
 			}
 		}]);
@@ -205,7 +204,7 @@ describe('SlsApiRelation', () => {
 					ContentType: 'image/png',
 					ContentLength: 10000
 				});
-				sandbox.stub(Model.prototype, 'insert').resolves(12345);
+				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
 			description: 'should return 200 with valid data',
@@ -215,7 +214,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(Model.prototype.insert, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
 					path: 'files/test.png',
 					name: 'test.png',
@@ -239,7 +238,7 @@ describe('SlsApiRelation', () => {
 					ContentType: 'image/png',
 					ContentLength: 10000
 				});
-				sandbox.stub(Model.prototype, 'insert').resolves(12345);
+				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
 			description: 'should return 200 with valid data and custom fields struct',
@@ -254,7 +253,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(Model.prototype.insert, {
+				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
 					path: 'files/test.png',
 					name: 'test.png',
@@ -321,7 +320,7 @@ describe('SlsApiRelation', () => {
 					ContentType: mime.getType(extension),
 					ContentLength: 10000
 				});
-				sandbox.stub(Model.prototype, 'insert').resolves(12345);
+				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
 			description: 'should return 200 with valid data with image type',
@@ -331,7 +330,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(Model.prototype.insert, sandbox.match({
+				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, sandbox.match({
 					type
 				}));
 			}
