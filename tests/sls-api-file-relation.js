@@ -4,6 +4,7 @@ const mime = require('mime');
 const APITest = require('@janiscommerce/api-test');
 const Model = require('@janiscommerce/model');
 const S3 = require('@janiscommerce/s3');
+const BaseModel = require('../lib/base-model');
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 
 
@@ -11,9 +12,8 @@ describe('SlsApiRelation', () => {
 	const apiExtendedSimple = ({
 		entityIdField,
 		bucket,
-		table,
-		databaseKey,
-		customFieldsStruct
+		customFieldsStruct,
+		model = BaseModel
 	} = {}) => {
 		class API extends SlsApiFileRelation {
 			get entityIdField() {
@@ -25,7 +25,7 @@ describe('SlsApiRelation', () => {
 			}
 		}
 
-		const getters = { databaseKey, table, customFieldsStruct };
+		const getters = { customFieldsStruct, model };
 
 		Object.keys(getters).forEach(getterName => {
 			if(getters[getterName] !== undefined) {
@@ -40,6 +40,16 @@ describe('SlsApiRelation', () => {
 
 
 	context('test validate', () => {
+		APITest(apiExtendedSimple({ model: null }), [{
+			description: 'should return 400 if model is not defined',
+			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_NOT_DEFINED } }
+		}]);
+
+		APITest(apiExtendedSimple({ model: 'model' }), [{
+			description: 'should return 400 if model is not defined',
+			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_IS_NOT_MODEL_CLASS } }
+		}]);
+
 		APITest(apiExtendedSimple(), [{
 			description: 'should return 400 if entityIdField is not defined',
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
@@ -68,36 +78,6 @@ describe('SlsApiRelation', () => {
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
 			bucket: 'test',
-			table: null
-		}), [{
-			description: 'should return 400 if table is not a string',
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.TABLE_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test',
-			table: 132
-		}), [{
-			description: 'should return 400 if table is not a string',
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.TABLE_NOT_STRING } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test',
-			databaseKey: 123
-		}), [{
-			description: 'should return 400 if databaseKey is not a string',
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.DATABASEKEY_NOT_STRING } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test',
-			databaseKey: 'database',
 			customFieldsStruct: []
 		}), [{
 			description: 'should return 400 if customFieldsStruct is not an array of strings',
@@ -106,8 +86,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass body',
 			request: {},
@@ -116,8 +95,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass fileName in body',
 			request: { data: {} },
@@ -126,8 +104,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass filename string',
 			request: { data: { fileName: 132 } },
@@ -136,8 +113,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass fileSource in body',
 			request: { data: { fileName: 'test.js' } },
@@ -146,8 +122,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass fileSource string',
 			request: { data: { fileName: 'test.js', fileSource: 132 } },
@@ -156,8 +131,7 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
-			table: 'test'
+			bucket: 'test'
 		}), [{
 			description: 'should return 400 if not pass custom fields in body',
 			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 'asdasd' } },
@@ -167,7 +141,6 @@ describe('SlsApiRelation', () => {
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
 			bucket: 'test',
-			table: 'test',
 			customFieldsStruct: { type: 'string' }
 		}), [{
 			description: 'should return 400 if pass incorrect custom fields in body',

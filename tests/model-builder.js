@@ -1,19 +1,45 @@
 'use strict';
 
 const assert = require('assert');
-const ModelBuilder = require('../lib/model-builder');
+const BaseModel = require('../lib/base-model');
 
 describe('test model builder', () => {
 
-	it('test build method', () => {
-		const ModelBuilded = ModelBuilder.build('table_test', 'database_test', 'test');
-		const modelInstance = new ModelBuilded();
+	it('test model only', () => {
+		assert.strictEqual(BaseModel.table, 'files');
 
-		assert.strictEqual(ModelBuilded.table, 'table_test');
-		assert.strictEqual(modelInstance.databaseKey, 'database_test');
-		assert.deepStrictEqual(ModelBuilded.fields, {
+		assert.deepStrictEqual(BaseModel.fields, {
 			id: true,
 			path: true,
+			size: true,
+			name: true,
+			type: true,
+			dateCreated: true
+		});
+	});
+
+	it('test model extended', () => {
+		class ModelTest extends BaseModel {
+			static get table() {
+				return 'entity_files';
+			}
+
+			static get fields() {
+				return {
+					...super.fields,
+					test: true
+				};
+			}
+		}
+		assert.strictEqual(ModelTest.table, 'entity_files');
+
+		assert.deepStrictEqual(ModelTest.fields, {
+			id: true,
+			path: true,
+			size: true,
+			name: true,
+			type: true,
+			dateCreated: true,
 			test: true
 		});
 	});
