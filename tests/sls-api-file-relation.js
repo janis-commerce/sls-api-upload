@@ -270,6 +270,9 @@ describe('SlsApiRelation', () => {
 			extension: '.jpg',
 			type: 'image'
 		}, {
+			extension: '.gif',
+			type: 'image'
+		}, {
 			extension: '.png',
 			type: 'image'
 		}, {
@@ -301,6 +304,9 @@ describe('SlsApiRelation', () => {
 			type: 'sheet'
 		}, {
 			extension: '.xlsx',
+			type: 'sheet'
+		}, {
+			extension: '.xls',
 			type: 'sheet'
 		}, {
 			extension: '.json',

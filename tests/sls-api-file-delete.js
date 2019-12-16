@@ -80,11 +80,11 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
-			description: 'should return 400 if fail get current file record',
+			description: 'should return 500 if fail get current file record',
 			request: {
 				pathParameters: [1, 2]
 			},
-			response: { code: 400 },
+			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.called(BaseModel.prototype.get);
 				sandbox.assert.notCalled(BaseModel.prototype.remove);
@@ -174,7 +174,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject').resolves();
 			},
 			session: true,
-			description: 'should return 200 with valid data',
+			description: 'should return 200 if delete record and file correctly',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -209,7 +209,7 @@ describe('SlsApiFileDelete', () => {
 				});
 			},
 			session: true,
-			description: 'should return 200 with valid data but file not exist in s3',
+			description: 'should return 200 if delete record correctly but file not exist in s3',
 			request: {
 				pathParameters: [1, 2]
 			},
