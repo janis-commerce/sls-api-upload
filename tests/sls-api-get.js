@@ -1,7 +1,9 @@
 'use strict';
 
+const glabalSandbox = require('sinon').createSandbox();
 const APITest = require('@janiscommerce/api-test');
 const S3 = require('@janiscommerce/s3');
+const { ApiGet } = require('@janiscommerce/api-get');
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileGet, SlsApiFileGetError } = require('../lib/index');
 
@@ -30,72 +32,52 @@ describe('SlsApiFileGet', () => {
 	};
 
 	const apiExtendedSimple = ({
-		entityIdField,
-		bucket,
-		model = BaseModel
+		bucket
 	} = {}) => {
 		class API extends SlsApiFileGet {
-			get entityIdField() {
-				return entityIdField;
-			}
-
 			get bucket() {
 				return bucket;
 			}
 		}
 
-		if(model !== undefined) {
-			Object.defineProperty(API.prototype, 'model', {
-				get: () => model
-			});
-		}
-
 		return API;
 	};
 
+	afterEach(() => {
+		glabalSandbox.restore();
+	});
+
+	beforeEach(() => {
+		glabalSandbox.stub(ApiGet.prototype, '_getModelInstance').returns(new BaseModel());
+	});
+
 
 	context('test validate', () => {
-		APITest(apiExtendedSimple({ model: null }), [{
-			description: 'should return 400 if model is not defined',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.MODEL_NOT_DEFINED } }
+		APITest(apiExtendedSimple(), 'api/entity/1/file/2', [{
+			before: sandbox => {
+				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+				sandbox.stub(S3, 'getSignedUrl');
+			},
+			request: {},
+			description: 'should return 500 if bucket is not defined',
+			session: true,
+			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_DEFINED } }
 		}]);
 
-		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'should return 400 if model is not defined',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.MODEL_IS_NOT_MODEL_CLASS } }
-		}]);
-
-		APITest(apiExtendedSimple(), [{
-			description: 'should return 400 if entityIdField is not defined',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({ entityIdField: 123 }), [{
-			description: 'should return 400 if entityIdField is not a string',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.ENTITY_ID_FIELD_NOT_STRING } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test'
-		}), [{
-			description: 'should return 400 if bucket is not defined',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 123
-		}), [{
-			description: 'should return 400 if bucket is not a string',
-			response: { code: 400, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_STRING } }
+		APITest(apiExtendedSimple({ bucket: 123 }), 'api/entity/1/file/2', [{
+			before: sandbox => {
+				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+				sandbox.stub(S3, 'getSignedUrl');
+			},
+			description: 'should return 500 if bucket is not a string',
+			request: {},
+			session: true,
+			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_STRING } }
 		}]);
 	});
 
 	context('test process', () => {
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').rejects();
 				sandbox.stub(S3, 'getSignedUrl');
@@ -112,10 +94,7 @@ describe('SlsApiFileGet', () => {
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 				sandbox.stub(S3, 'getSignedUrl').rejects();
@@ -132,10 +111,7 @@ describe('SlsApiFileGet', () => {
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([]);
 				sandbox.stub(S3, 'getSignedUrl');
@@ -145,17 +121,14 @@ describe('SlsApiFileGet', () => {
 			request: {
 				pathParameters: [1, 2]
 			},
-			response: { code: 404, body: { message: SlsApiFileGetError.messages.FILE_RECORD_NOT_FOUND } },
+			response: { code: 404, body: { message: 'common.message.notFound' } },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.called(BaseModel.prototype.get);
 				sandbox.assert.notCalled(S3.getSignedUrl);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 				sandbox.stub(S3, 'getSignedUrl').resolves(url);
@@ -168,7 +141,7 @@ describe('SlsApiFileGet', () => {
 			response: { code: 200, body: { ...rowFormatted, url } },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					filters: { test: 1, id: 2 }
+					filters: { entity: '1', id: '2' }, limit: 1, page: 1
 				});
 
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
@@ -178,10 +151,7 @@ describe('SlsApiFileGet', () => {
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 				sandbox.stub(S3, 'getSignedUrl').rejects({
@@ -196,7 +166,7 @@ describe('SlsApiFileGet', () => {
 			response: { code: 200, body: { ...rowFormatted, url: null } },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					filters: { test: 1, id: 2 }
+					filters: { entity: '1', id: '2' }, limit: 1, page: 1
 				});
 
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
