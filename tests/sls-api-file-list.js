@@ -25,9 +25,13 @@ describe('File List Api', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
+		mimeType: 'image/png',
 		path: 'file/1233.jpg',
 		type: 'image',
-		dateCreated: 1576269240
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	const rowGetted2 = {
@@ -35,9 +39,13 @@ describe('File List Api', () => {
 		name: 'file.txt',
 		claimId: 7,
 		size: 8405,
+		mimeType: 'image/png',
 		path: 'file/1233.txt',
 		type: 'other',
-		dateCreated: 1576269240
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	const rowFormatted = {
@@ -45,8 +53,12 @@ describe('File List Api', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
+		mimeType: 'image/png',
 		type: 'image',
-		dateCreated: 1576269240
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	const rowFormatted2 = {
@@ -54,8 +66,12 @@ describe('File List Api', () => {
 		name: 'file.txt',
 		claimId: 7,
 		size: 8405,
+		mimeType: 'image/png',
 		type: 'other',
-		dateCreated: 1576269240
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	APITest(apiExtendedSimple(), [

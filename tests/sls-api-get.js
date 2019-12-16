@@ -17,9 +17,13 @@ describe('SlsApiFileGet', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
+		mimeType: 'image/png',
 		path: '/files/file.jpg',
-		type: 'image',
-		dateCreated: 1576269240
+		type: 'other',
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	const rowFormatted = {
@@ -27,8 +31,12 @@ describe('SlsApiFileGet', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
-		type: 'image',
-		dateCreated: 1576269240
+		mimeType: 'image/png',
+		type: 'other',
+		dateCreated: 1576269240,
+		userCreated: 5,
+		dateModified: 1576272801,
+		userModified: null
 	};
 
 	const apiExtendedSimple = ({
