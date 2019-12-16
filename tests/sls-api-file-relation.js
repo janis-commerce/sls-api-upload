@@ -323,7 +323,7 @@ describe('SlsApiRelation', () => {
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
-			description: 'should return 200 with valid data with image type',
+			description: `should return 200 passing diferents files types in data (${extension})`,
 			request: {
 				data: { fileName: `test${extension}`, fileSource: `files/test${extension}` },
 				pathParameters: [1]

@@ -37,7 +37,7 @@
     "@janiscommerce/api-list": "^3.0.1",
     "@janiscommerce/api-test": "^2.1.0",
     "@janiscommerce/model": "^3.3.3",
-    "@janiscommerce/s3": "^1.2.0",
+    "@janiscommerce/s3": "^1.2.1",
     "aws-sdk": "^2.562.0",
     "mime": "^2.4.4",
     "superstruct": "^0.6.2",

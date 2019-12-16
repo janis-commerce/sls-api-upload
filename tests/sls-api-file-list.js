@@ -69,7 +69,9 @@ describe('File List Api', () => {
 				body: []
 			},
 			session: true,
-			response: {},
+			response: {
+				code: 200
+			},
 			after: (response, sandbox) => {
 				sandbox.assert.calledOnce(BaseModel.prototype.get);
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
@@ -92,7 +94,8 @@ describe('File List Api', () => {
 				body: [rowFormatted],
 				headers: {
 					'x-janis-total': 1
-				}
+				},
+				code: 200
 			},
 			after: (response, sandbox) => {
 				sandbox.assert.calledOnce(BaseModel.prototype.get);
@@ -118,7 +121,8 @@ describe('File List Api', () => {
 				body: [rowFormatted, rowFormatted2],
 				headers: {
 					'x-janis-total': 2
-				}
+				},
+				code: 200
 			},
 			after: (response, sandbox) => {
 				sandbox.assert.calledOnce(BaseModel.prototype.get);
@@ -146,7 +150,8 @@ describe('File List Api', () => {
 				body: [rowFormatted],
 				headers: {
 					'x-janis-total': 1
-				}
+				},
+				code: 200
 			},
 			after: (response, sandbox) => {
 				sandbox.assert.calledOnce(BaseModel.prototype.get);
@@ -201,7 +206,9 @@ describe('File List Api', () => {
 						}
 					}
 				},
-				response: {},
+				response: {
+					code: 200
+				},
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get');
 					BaseModel.prototype.get.returns([]);
@@ -237,7 +244,9 @@ describe('File List Api', () => {
 							sortBy: sort
 						}
 					},
-					response: {},
+					response: {
+						code: 200
+					},
 					before: sandbox => {
 						sandbox.stub(BaseModel.prototype, 'get');
 						BaseModel.prototype.get.returns([]);
@@ -261,7 +270,9 @@ describe('File List Api', () => {
 							sortDirection: 'desc'
 						}
 					},
-					response: {},
+					response: {
+						code: 200
+					},
 					before: sandbox => {
 						sandbox.stub(BaseModel.prototype, 'get');
 						BaseModel.prototype.get.returns([]);
