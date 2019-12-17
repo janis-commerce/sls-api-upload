@@ -154,7 +154,8 @@ describe('SlsApiFileGet', () => {
 
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
 					Bucket: 'test',
-					Key: '/files/file.jpg'
+					Key: '/files/file.jpg',
+					ResponseContentDisposition: 'attachment'
 				});
 			}
 		}]);
@@ -179,7 +180,8 @@ describe('SlsApiFileGet', () => {
 
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
 					Bucket: 'test',
-					Key: '/files/file.jpg'
+					Key: '/files/file.jpg',
+					ResponseContentDisposition: 'attachment'
 				});
 			}
 		}]);
