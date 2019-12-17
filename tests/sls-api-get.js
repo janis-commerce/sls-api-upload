@@ -14,7 +14,7 @@ describe('SlsApiFileGet', () => {
 
 	const rowGetted = {
 		id: 20,
-		name: 'what.jpeg',
+		name: 'file.jpg',
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/png',
@@ -28,7 +28,7 @@ describe('SlsApiFileGet', () => {
 
 	const rowFormatted = {
 		id: 20,
-		name: 'what.jpeg',
+		name: 'file.jpg',
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/png',
@@ -155,7 +155,7 @@ describe('SlsApiFileGet', () => {
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
 					Bucket: 'test',
 					Key: '/files/file.jpg',
-					ResponseContentDisposition: 'attachment'
+					ResponseContentDisposition: 'attachment; filename="file.jpg"'
 				});
 			}
 		}]);
@@ -181,7 +181,7 @@ describe('SlsApiFileGet', () => {
 				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
 					Bucket: 'test',
 					Key: '/files/file.jpg',
-					ResponseContentDisposition: 'attachment'
+					ResponseContentDisposition: 'attachment; filename="file.jpg"'
 				});
 			}
 		}]);
