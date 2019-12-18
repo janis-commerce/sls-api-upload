@@ -339,6 +339,7 @@ If you dont have this problem only add the entity name in availableFilters
 	}
 	...
 ```
+This api uses [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
 
 ## Usage SlsApiFileGet Module
 
@@ -366,6 +367,7 @@ This is used to indicate bucket where find temporal public url of file.
 	}
 	...
 ```
+This api uses [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
 
 ## Usage BaseFileModel Module
 
