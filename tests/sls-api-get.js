@@ -10,16 +10,16 @@ const { SlsApiFileGet, SlsApiFileGetError } = require('../lib/index');
 
 describe('SlsApiFileGet', () => {
 	const url =
-		'https://bucket.s3.amazonaws.com/fizzmodarg/uploads/2019/11/27/6dbe6f910adb.png?AWSAccessKeyId=asd456&Expires=1576516295&Signature=asd456';
+		'https://bucket.s3.amazonaws.com/files/a87a83d3-f494-4069-a0f7-fa0894590072.png?AWSAccessKeyId=0&Expires=0&Signature=0';
 
 	const rowGetted = {
 		id: 20,
-		name: 'file.jpg',
+		name: 'file.png',
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/png',
-		path: '/files/file.jpg',
-		type: 'other',
+		path: '/files/a87a83d3-f494-4069-a0f7-fa0894590072.png',
+		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
 		dateModified: 1576272801,
@@ -28,15 +28,21 @@ describe('SlsApiFileGet', () => {
 
 	const rowFormatted = {
 		id: 20,
-		name: 'file.jpg',
+		name: 'file.png',
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/png',
-		type: 'other',
+		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
 		dateModified: 1576272801,
 		userModified: null
+	};
+
+	const bucketParams = {
+		Bucket: 'test',
+		Key: '/files/a87a83d3-f494-4069-a0f7-fa0894590072.png',
+		ResponseContentDisposition: 'attachment; filename="file.png"'
 	};
 
 	const apiExtendedSimple = ({
@@ -97,7 +103,7 @@ describe('SlsApiFileGet', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
 				sandbox.assert.notCalled(S3.getSignedUrl);
 			}
 		}]);
@@ -114,8 +120,8 @@ describe('SlsApiFileGet', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
-				sandbox.assert.called(S3.getSignedUrl);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(S3.getSignedUrl);
 			}
 		}]);
 
@@ -131,7 +137,7 @@ describe('SlsApiFileGet', () => {
 			},
 			response: { code: 404, body: { message: 'common.message.notFound' } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
 				sandbox.assert.notCalled(S3.getSignedUrl);
 			}
 		}]);
@@ -152,11 +158,7 @@ describe('SlsApiFileGet', () => {
 					filters: { entity: '1', id: '2' }, limit: 1, page: 1
 				});
 
-				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
-					Bucket: 'test',
-					Key: '/files/file.jpg',
-					ResponseContentDisposition: 'attachment; filename="file.jpg"'
-				});
+				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
 			}
 		}]);
 
@@ -178,11 +180,7 @@ describe('SlsApiFileGet', () => {
 					filters: { entity: '1', id: '2' }, limit: 1, page: 1
 				});
 
-				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', {
-					Bucket: 'test',
-					Key: '/files/file.jpg',
-					ResponseContentDisposition: 'attachment; filename="file.jpg"'
-				});
+				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
 			}
 		}]);
 	});

@@ -20,16 +20,19 @@ describe('SlsApiFileDelete', () => {
 			get bucket() {
 				return bucket;
 			}
-		}
 
-		if(model !== undefined) {
-			Object.defineProperty(API.prototype, 'model', {
-				get: () => model
-			});
+			get model() {
+				return model;
+			}
 		}
 
 		return API;
 	};
+
+	const defaultApiExtended = apiExtendedSimple({
+		entityIdField: 'test',
+		bucket: 'test'
+	});
 
 
 	context('test validate', () => {
@@ -39,7 +42,7 @@ describe('SlsApiFileDelete', () => {
 		}]);
 
 		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'should return 400 if model is not defined',
+			description: 'should return 400 if model is not a Class',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_IS_NOT_MODEL_CLASS } }
 		}]);
 
@@ -70,10 +73,7 @@ describe('SlsApiFileDelete', () => {
 	});
 
 	context('test process', () => {
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').rejects();
 				sandbox.stub(BaseModel.prototype, 'remove');
@@ -86,16 +86,13 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
 				sandbox.assert.notCalled(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
@@ -110,16 +107,13 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
-				sandbox.assert.called(BaseModel.prototype.remove);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
@@ -134,16 +128,13 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
-				sandbox.assert.called(BaseModel.prototype.remove);
-				sandbox.assert.called(S3.deleteObject);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.remove);
+				sandbox.assert.calledOnce(S3.deleteObject);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([]);
 				sandbox.stub(BaseModel.prototype, 'remove');
@@ -156,16 +147,13 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 404, body: { message: SlsApiFileDeleteError.messages.FILE_RECORD_NOT_FOUND } },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.get);
+				sandbox.assert.calledOnce(BaseModel.prototype.get);
 				sandbox.assert.notCalled(BaseModel.prototype.remove);
 				sandbox.assert.notCalled(S3.deleteObject);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
@@ -178,7 +166,7 @@ describe('SlsApiFileDelete', () => {
 			request: {
 				pathParameters: [1, 2]
 			},
-			response: { code: 200, body: { id: 1 } },
+			response: { code: 200 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }
@@ -195,10 +183,7 @@ describe('SlsApiFileDelete', () => {
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([{
 					path: '/files/file.jpg'
@@ -213,7 +198,7 @@ describe('SlsApiFileDelete', () => {
 			request: {
 				pathParameters: [1, 2]
 			},
-			response: { code: 200, body: { id: 1 } },
+			response: { code: 200 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }

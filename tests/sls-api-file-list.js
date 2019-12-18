@@ -1,23 +1,20 @@
 'use strict';
 
-const glabalSandbox = require('sinon').createSandbox();
+const globalSandbox = require('sinon').createSandbox();
 const APITest = require('@janiscommerce/api-test');
 const { ApiListData } = require('@janiscommerce/api-list');
 const { SlsApiFileList } = require('../lib/index');
 const BaseModel = require('../lib/base-model');
 
 describe('File List Api', () => {
-	const apiExtendedSimple = () => {
-		class API extends SlsApiFileList {}
-		return API;
-	};
+	class ApiListExample extends SlsApiFileList {}
 
 	afterEach(() => {
-		glabalSandbox.restore();
+		globalSandbox.restore();
 	});
 
 	beforeEach(() => {
-		glabalSandbox.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
+		globalSandbox.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
 	});
 
 	const rowGetted = {
@@ -25,8 +22,8 @@ describe('File List Api', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
-		mimeType: 'image/png',
-		path: 'file/1233.jpg',
+		mimeType: 'image/jpeg',
+		path: 'file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg',
 		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -39,8 +36,8 @@ describe('File List Api', () => {
 		name: 'file.txt',
 		claimId: 7,
 		size: 8405,
-		mimeType: 'image/png',
-		path: 'file/1233.txt',
+		mimeType: 'text/plain',
+		path: 'file/a87a83d3-f494-4069-a0f7-fa0894590073.txt',
 		type: 'other',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -53,7 +50,7 @@ describe('File List Api', () => {
 		name: 'what.jpeg',
 		claimId: 7,
 		size: 5014,
-		mimeType: 'image/png',
+		mimeType: 'image/jpeg',
 		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -66,7 +63,7 @@ describe('File List Api', () => {
 		name: 'file.txt',
 		claimId: 7,
 		size: 8405,
-		mimeType: 'image/png',
+		mimeType: 'text/plain',
 		type: 'other',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -74,13 +71,13 @@ describe('File List Api', () => {
 		userModified: null
 	};
 
-	APITest(apiExtendedSimple(), [
+	APITest(ApiListExample, [
 		{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get')
-					.returns([]);
+					.resolves([]);
 			},
-			description: 'should return empty body when not exists rows',
+			description: 'should return empty array in body when not exists rows',
 			request: {
 				body: []
 			},
@@ -99,9 +96,9 @@ describe('File List Api', () => {
 		{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get')
-					.returns([rowGetted]);
+					.resolves([rowGetted]);
 				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.returns({ total: 1 });
+					.resolves({ total: 1 });
 			},
 			description: 'should return a body with an array of results, with each row formatted (one row)',
 			request: {},
@@ -126,9 +123,9 @@ describe('File List Api', () => {
 		{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get')
-					.returns([rowGetted, rowGetted2]);
+					.resolves([rowGetted, rowGetted2]);
 				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.returns({ total: 2 });
+					.resolves({ total: 2 });
 			},
 			description: 'should return a body with an array of results, with each row formatted (two rows)',
 			request: {},
@@ -153,9 +150,9 @@ describe('File List Api', () => {
 		{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get')
-					.returns([rowGetted]);
+					.resolves([rowGetted]);
 				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.returns({ total: 1 });
+					.resolves({ total: 1 });
 			},
 			description: 'should return a body with an array of results, sending a filter',
 			request: {
@@ -209,7 +206,7 @@ describe('File List Api', () => {
 			dateCreated: '2019-02-22T21:30:59.000Z'
 		};
 
-		APITest(apiExtendedSimple(), Object.keys(filters).map(key => {
+		APITest(ApiListExample, Object.keys(filters).map(key => {
 			const filter = filters[key];
 			const filterValue = key === 'dateCreated' ? new Date(filters[key]) : filters[key];
 
@@ -250,7 +247,7 @@ describe('File List Api', () => {
 			'dateCreated'
 		];
 
-		APITest(apiExtendedSimple(),
+		APITest(ApiListExample,
 			sorts.reduce((accum, sort) => ([
 				...accum,
 				{
@@ -265,7 +262,7 @@ describe('File List Api', () => {
 					},
 					before: sandbox => {
 						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.returns([]);
+						BaseModel.prototype.get.resolves([]);
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnce(BaseModel.prototype.get);
@@ -291,7 +288,7 @@ describe('File List Api', () => {
 					},
 					before: sandbox => {
 						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.returns([]);
+						BaseModel.prototype.get.resolves([]);
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnce(BaseModel.prototype.get);

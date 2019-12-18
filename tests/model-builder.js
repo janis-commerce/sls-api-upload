@@ -3,9 +3,9 @@
 const assert = require('assert');
 const BaseModel = require('../lib/base-model');
 
-describe('test model builder', () => {
+describe('Model builder', () => {
 
-	it('test model only', () => {
+	it('Model only', () => {
 		assert.strictEqual(BaseModel.table, 'files');
 
 		assert.deepStrictEqual(BaseModel.fields, {
@@ -18,7 +18,7 @@ describe('test model builder', () => {
 		});
 	});
 
-	it('test model extended', () => {
+	it('Model extended', () => {
 		class ModelTest extends BaseModel {
 			static get table() {
 				return 'entity_files';

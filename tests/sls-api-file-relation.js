@@ -22,40 +22,48 @@ describe('SlsApiRelation', () => {
 			get bucket() {
 				return bucket;
 			}
-		}
 
-		const getters = { customFieldsStruct, model };
-
-		Object.keys(getters).forEach(getterName => {
-			if(getters[getterName] !== undefined) {
-				Object.defineProperty(API.prototype, getterName, {
-					get: () => getters[getterName]
-				});
+			get model() {
+				return model;
 			}
-		});
+
+			get customFieldsStruct() {
+				return customFieldsStruct || super.customFieldsStruct;
+			}
+		}
 
 		return API;
 	};
 
+	const defaultApiExtended = apiExtendedSimple({
+		entityIdField: 'test',
+		bucket: 'test'
+	});
+
+	const defaultRequestData = { fileName: 'test.js', fileSource: 'files/test.js' };
 
 	context('test validate', () => {
 		APITest(apiExtendedSimple({ model: null }), [{
 			description: 'should return 400 if model is not defined',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'should return 400 if model is not defined',
+			description: 'should return 400 if model is not a Class',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_IS_NOT_MODEL_CLASS } }
 		}]);
 
 		APITest(apiExtendedSimple(), [{
 			description: 'should return 400 if entityIdField is not defined',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ entityIdField: 123 }), [{
 			description: 'should return 400 if entityIdField is not a string',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_STRING } }
 		}]);
 
@@ -63,6 +71,7 @@ describe('SlsApiRelation', () => {
 			entityIdField: 'test'
 		}), [{
 			description: 'should return 400 if bucket is not defined',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_DEFINED } }
 		}]);
 
@@ -71,67 +80,41 @@ describe('SlsApiRelation', () => {
 			bucket: 123
 		}), [{
 			description: 'should return 400 if bucket is not a string',
+			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_STRING } }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test',
-			customFieldsStruct: []
-		}), [{
-			description: 'should return 400 if customFieldsStruct is not an array of strings',
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.CUSTOM_FIELDS_STRUCT_NOT_OBJECT } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass body',
 			request: {},
 			response: { code: 400 }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass fileName in body',
 			request: { data: {} },
 			response: { code: 400 }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass filename string',
 			request: { data: { fileName: 132 } },
 			response: { code: 400 }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass fileSource in body',
 			request: { data: { fileName: 'test.js' } },
 			response: { code: 400 }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass fileSource string',
 			request: { data: { fileName: 'test.js', fileSource: 132 } },
 			response: { code: 400 }
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			description: 'should return 400 if not pass custom fields in body',
 			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 'asdasd' } },
 			response: { code: 400 }
@@ -149,10 +132,7 @@ describe('SlsApiRelation', () => {
 	});
 
 	context('test process', () => {
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').rejects();
 				sandbox.stub(BaseModel.prototype, 'insert');
@@ -165,16 +145,13 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(S3.headObject);
+				sandbox.assert.calledOnce(S3.headObject);
 				sandbox.assert.notCalled(BaseModel.prototype.insert);
 			}
 		}]);
 
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').resolves({
 					ContentType: 'image/png',
@@ -190,15 +167,12 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 500 },
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.called(BaseModel.prototype.insert);
-				sandbox.assert.called(S3.headObject);
+				sandbox.assert.calledOnce(BaseModel.prototype.insert);
+				sandbox.assert.calledOnce(S3.headObject);
 			}
 		}]);
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}), [{
+		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').resolves({
 					ContentType: 'image/png',
@@ -316,11 +290,7 @@ describe('SlsApiRelation', () => {
 			type: 'other'
 		}];
 
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test'
-		}),
-		types.map(({ extension, type }) => ({
+		APITest(defaultApiExtended, types.map(({ extension, type }) => ({
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').resolves({
 					ContentType: mime.getType(extension),
