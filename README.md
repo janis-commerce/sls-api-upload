@@ -193,7 +193,7 @@ This is used to pass a Files Model Class for update and relationate file with en
 
 *Required*
 
-This is used to indicate field name where filter in database
+This is used to indicate field name for filter in database
 
 ```js
 	...
@@ -287,7 +287,7 @@ This is used to pass a Files Model Class for remove a file record
 
 *Required*
 
-This is used to indicate field name where filter in database
+This is used to indicate field name for filter in database
 
 ```js
 	...
