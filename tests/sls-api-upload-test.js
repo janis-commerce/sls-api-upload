@@ -53,6 +53,7 @@ const apiExtendedWithGetters = (
 };
 
 describe('SlsApiUpload', () => {
+
 	context('test request body', () => {
 
 		const response = { code: 400 };
@@ -148,9 +149,7 @@ describe('SlsApiUpload', () => {
 			request: { data: { fileName: 'test.txt' } },
 			response: { code: 400, body: { message: SlsApiUploadError.messages.LENGTH_RANGE_ITEM_NOT_NUMBER } }
 		}]);
-
 	});
-
 
 	context('Correct usage', () => {
 		const uuidRgx = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}.json$';
@@ -290,7 +289,23 @@ describe('SlsApiUpload', () => {
 				}
 			}
 		]);
+	});
 
+	context('S3 error', () => {
+
+		beforeEach(() => {
+			globalSandbox.stub(S3, 'createPresignedPost').rejects(new Error('S3 internal error'));
+		});
+
+		afterEach(() => {
+			globalSandbox.restore();
+		});
+
+		APITest(apiExtendedSimple('bucket-name'), [{
+			description: 'should return 500 if S3 rejects',
+			request: { data: { fileName: 'test.text' } },
+			response: { code: 500 }
+		}]);
 	});
 
 });
