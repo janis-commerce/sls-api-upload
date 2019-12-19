@@ -25,6 +25,18 @@ class MyApiUpload extends SlsApiUpload {
 	get path() {
 		return 'files/';
 	}
+
+	get availableTypes() {
+		return ['image/jpg', 'image/jpeg', 'image/png']
+	}
+
+	get expiration() {
+		return 300;
+	}
+
+	get sizeRange() {
+		return [1, 1024 * 1024 * 5]; // 1byte - 5mb
+	}
 }
 
 module.exports = MyApiUpload;
@@ -35,7 +47,7 @@ Request data example;
 
 ```js
 {
-	fileName: 'string' // file.JSON, file.png, etc
+	fileName: 'my-file.jpg'
 }
 ```
 
@@ -46,14 +58,12 @@ The following getters can be used to customize and validate your SlsApiUpload.
 
 *Required*
 
-This is used to indicate bucket where save the file.
+This is used to indicate the bucket where the file should be saved
 
 ```js
-	...
-	get bucket() {
-		return 'bucket-name';
-	}
-	...
+get bucket() {
+	return 'bucket-name';
+}
 ```
 
 ### get path()
@@ -62,14 +72,12 @@ This is used to indicate bucket where save the file.
 
 *Default=""*
 
-This is used to indicate path where save the file
+This is used to indicate the path where the file should be saved
 
 ```js
-	...
-	get path() {
-		return 'files/pdf/';
-	}
-	...
+get path() {
+	return 'files/pdf/';
+}
 ```
 
 ### get availableTypes()
@@ -78,14 +86,12 @@ This is used to indicate path where save the file
 
 *Default=[]*
 
-This is used to indicate accepted types for upload to s3. If you not define availableTypes, all types are valid. Example:
+This is used to indicate the accepted file types to be uploaded. If you not define them, all types will be valid. Example:
 
 ```js
-	...
-	get availableTypes() {
-		return ['application/json']
-	}
-	...
+get availableTypes() {
+	return ['application/pdf']
+}
 ```
 
 ### get expiration()
@@ -94,30 +100,26 @@ This is used to indicate accepted types for upload to s3. If you not define avai
 
 *Default=60*
 
-This is used to indicate expiration time for upload file in s3 (in seconds)
+This is used to indicate the expiration time in seconds of the generated URL
 
 ```js
-	...
-	get expiration() {
-		return 120;
-	}
-	...
+get expiration() {
+	return 120;
+}
 ```
 
 ### get sizeRange()
 
 *Optional*
 
-*Default=[1,10000000]*
+*Default=[1,10485760] // 1B to 10MB*
 
-This is used to indicate range of size for the files to upload to s3 in bytes.
+This is used to indicate the valid file size range to be uploaded
 
 ```js
-	...
-	get sizeRange() {
-		return [1, 20000000]; // 1byte - 20mb
-	}
-	...
+get sizeRange() {
+	return [1, 20 * 1024 * 1024]; // 1byte - 20mb
+}
 ```
 
 ## Usage SlsApiFileRelation Module
@@ -130,7 +132,7 @@ const FileModel = require('../models/your-file-model');
 
 class MyApiRelation extends SlsApiFileRelation {
 	get bucket() {
-		return process.env.S3_BUCKET;
+		return 'bucket-name';
 	}
 
 	get model() {
@@ -138,67 +140,63 @@ class MyApiRelation extends SlsApiFileRelation {
 	}
 
 	get entityIdField() {
-		return 'idField';
+		return 'productId';
 	}
 }
 ```
 
-The api relation require data:
+This API has the following required request data:
 
-filename: is a name and extension file. Example: `image.png`
-
-filesSource: is a key generated in s3 for file uploaded. Example: `files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png`
+- **filename**: (string) The name and extension of the file.
+- **filesSource**: (string) The full key of the file stored in S3.
 
 Request data example;
 
-```js
+```json
 {
-	fileName: 'string',
-	fileSource: 'string'
+	"fileName": "image.png",
+	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png"
 }
 ```
 
-The following getters can be used to customize and validate your SlsApiFileRelation.
+The following getters can be used to customize and validate your API:
 
 ### get bucket()
 
 *Required*
 
-This is used to indicate bucket where find the file.
+This is used to indicate the bucket where the file was saved
 
 ```js
-	...
-	get bucket() {
-		return 'bucket-name';
-	}
-	...
+get bucket() {
+	return 'bucket-name';
+}
 ```
+
 ### get model()
 
 *Required*
 
-This is used to pass a Files Model Class for update and relationate file with entityId
+This is used to indicate the Model class that should be used to save the file relationship
 
 ```js
-	const FileModel = require('../models/your-file-model');
+const FileModel = require('../models/your-file-model');
 
-	...
-	get model() {
-		return FileModel';
-	}
-	...
+get model() {
+	return FileModel;
+}
 ```
 
 ### get entityIdField()
 
 *Required*
 
-This is used to indicate field name for filter in database
+This is used to indicate the field name where the related entity ID should be saved
 
 ```js
 	...
 	get entityIdField() {
-		return 'entityId';
+		return 'productId';
 	}
 	...
 ```
@@ -207,25 +205,24 @@ This is used to indicate field name for filter in database
 
 *Optional*
 
-This is used to indicate others fields to save for send in data
+This is used to indicate more fields to be validated from the request and saved with the relationship.
 
 ```js
-	...
-	get customFieldsStruct() {
-		return {
-			newField: 'string'
-		};
-	}
-	...
+get customFieldsStruct() {
+	return {
+		myRelationshipCustomField: 'string',
+		myOptionalRelationshipCustomField: 'string?'
+	};
+}
 ```
 
 Request data example;
 
-```js
+```json
 {
-	fileName: 'string',
-	fileSource: 'string',
-	newField: 'string'
+	"fileName": "image.png",
+	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png",
+	"myRelationshipCustomField": "theValue"
 }
 ```
 
@@ -239,7 +236,7 @@ const FileModel = require('../models/your-file-model');
 
 class MyApiDelete extends SlsApiFileDelete {
 	get bucket() {
-		return process.env.S3_BUCKET;
+		return 'bucket-name';
 	}
 
 	get model() {
@@ -247,7 +244,7 @@ class MyApiDelete extends SlsApiFileDelete {
 	}
 
 	get entityIdField() {
-		return 'idField';
+		return 'productId';
 	}
 }
 ```
@@ -258,43 +255,37 @@ The following getters can be used to customize and validate your SlsApiFileDelet
 
 *Required*
 
-This is used to indicate bucket where delete the file.
+This is used to indicate the bucket where the file is.
 
 ```js
-	...
-	get bucket() {
-		return 'bucket-name';
-	}
-	...
+get bucket() {
+	return 'bucket-name';
+}
 ```
 ### get model()
 
 *Required*
 
-This is used to pass a Files Model Class for remove a file record
+This is used to indicate the Model class that should be used to remove the file relationship
 
 ```js
-	const FileModel = require('../models/your-file-model');
+const FileModel = require('../models/your-file-model');
 
-	...
-	get model() {
-		return FileModel';
-	}
-	...
+get model() {
+	return FileModel;
+}
 ```
 
 ### get entityIdField()
 
 *Required*
 
-This is used to indicate field name for filter in database
+This is used to indicate the field name where the related entity ID was saved
 
 ```js
-	...
-	get entityIdField() {
-		return 'entityId';
-	}
-	...
+get entityIdField() {
+	return 'productId';
+}
 ```
 
 ## Usage SlsApiFileList Module
@@ -308,38 +299,35 @@ class MyApiList extends SlsApiFileList {}
 
 ```
 
-Usually, this API has a parent entity and when the API finds records in the model, it filters by parent entity name.
-To change this you must add available filters
+Usually, this API has a parent entity and when the API finds records in the model, it filters by parent entity name indicated in the API path.
+To change this name, you can set it in the availableFilters getter.
+
+Here is an example for an API `/product/10/file`, with a field `productId` in the DB:
 
 ```js
-	...
-	get availableFilters() {
-		return [
-			...super.availableFilters,
-			{
-				name: 'entityName',
-				internalName: 'entityId'
-			}
-		];
-	}
-	...
+get availableFilters() {
+	return [
+		...super.availableFilters,
+		{
+			name: 'product',
+			internalName: 'productId'
+		}
+	];
+}
 ```
 
-
-If you dont have this problem only add the entity name in availableFilters
-
+If you dont have this problem, just add the entity name in availableFilters getter:
 
 ```js
-	...
-	get availableFilters() {
-		return [
-			...super.availableFilters,
-			'entityName'
-		];
-	}
-	...
+get availableFilters() {
+	return [
+		...super.availableFilters,
+		'product'
+	];
+}
 ```
-This api uses [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
+
+This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
 
 ## Usage SlsApiFileGet Module
 
@@ -349,7 +337,6 @@ This api uses [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscomm
 const { SlsApiFileGet } = require('@janiscommerce/sls-api-upload');
 
 class MyApiGet extends SlsApiFileGet {}
-
 ```
 
 The following getters can be used to customize and validate your SlsApiFileGet.
@@ -358,16 +345,15 @@ The following getters can be used to customize and validate your SlsApiFileGet.
 
 *Required*
 
-This is used to indicate bucket where find temporal public url of file.
+This is used to indicate the bucket where the file is.
 
 ```js
-	...
-	get bucket() {
-		return 'bucket-name';
-	}
-	...
+get bucket() {
+	return 'bucket-name';
+}
 ```
-This api uses [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
+
+This API extends from [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
 
 ## Usage BaseFileModel Module
 
@@ -384,7 +370,7 @@ class FileModel extends BaseFileModel {
 	static get fields() {
 		return {
 			...super.fields,
-			entityId: true
+			productId: true
 		};
 	}
 }
@@ -399,31 +385,29 @@ The following getters can be used to customize and validate your BaseFileModel.
 
 *Default="files"*
 
-This is used to indicate table files name.
+This is used to indicate the name of the files table/collection
 
 ```js
-	...
-	static get table() {
-		return 'your_table_files';
-	}
-	...
+static get table() {
+	return 'your_table_files';
+}
 ```
 
 ### static get fields()
 
 *Required*
 
-*Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true };*
+*Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true }*
 
-This is used to indicate fields for get in database.
+This is used to indicate the fields of the files table/collection
 
 ```js
-	...
-	static get fields() {
-		return {
-			...super.fields,
-			entityId: true
-		};
-	}
-	...
+static get fields() {
+	return {
+		...super.fields,
+		productId: true
+	};
+}
 ```
+
+This Class extends from [@janiscommerce/model](https://www.npmjs.com/package/@janiscommerce/model)
