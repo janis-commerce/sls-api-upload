@@ -381,7 +381,7 @@ The following getters can be used to customize and validate your BaseFileModel.
 
 ### static get table()
 
-*Required*
+*Optional*
 
 *Default="files"*
 
@@ -395,7 +395,7 @@ static get table() {
 
 ### static get fields()
 
-*Required*
+*Optional*
 
 *Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true }*
 
