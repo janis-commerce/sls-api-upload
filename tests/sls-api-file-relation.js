@@ -6,8 +6,8 @@ const S3 = require('@janiscommerce/s3');
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 
-
 describe('SlsApiRelation', () => {
+
 	const apiExtendedSimple = ({
 		entityIdField,
 		bucket,
@@ -42,27 +42,27 @@ describe('SlsApiRelation', () => {
 
 	const defaultRequestData = { fileName: 'test.js', fileSource: 'files/test.js' };
 
-	context('test validate', () => {
+	context('Validate', () => {
 		APITest(apiExtendedSimple({ model: null }), [{
-			description: 'should return 400 if model is not defined',
+			description: 'Should return 400 if model is not defined',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'should return 400 if model is not a Class',
+			description: 'Should return 400 if model is not a Class',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_IS_NOT_MODEL_CLASS } }
 		}]);
 
 		APITest(apiExtendedSimple(), [{
-			description: 'should return 400 if entityIdField is not defined',
+			description: 'Should return 400 if entityIdField is not defined',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ entityIdField: 123 }), [{
-			description: 'should return 400 if entityIdField is not a string',
+			description: 'Should return 400 if entityIdField is not a string',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_STRING } }
 		}]);
@@ -70,7 +70,7 @@ describe('SlsApiRelation', () => {
 		APITest(apiExtendedSimple({
 			entityIdField: 'test'
 		}), [{
-			description: 'should return 400 if bucket is not defined',
+			description: 'Should return 400 if bucket is not defined',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_DEFINED } }
 		}]);
@@ -79,43 +79,43 @@ describe('SlsApiRelation', () => {
 			entityIdField: 'test',
 			bucket: 123
 		}), [{
-			description: 'should return 400 if bucket is not a string',
+			description: 'Should return 400 if bucket is not a string',
 			request: { data: defaultRequestData },
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_STRING } }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass body',
+			description: 'Should return 400 if not pass body',
 			request: {},
 			response: { code: 400 }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass fileName in body',
+			description: 'Should return 400 if not pass fileName in body',
 			request: { data: {} },
 			response: { code: 400 }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass filename string',
+			description: 'Should return 400 if not pass filename string',
 			request: { data: { fileName: 132 } },
 			response: { code: 400 }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass fileSource in body',
+			description: 'Should return 400 if not pass fileSource in body',
 			request: { data: { fileName: 'test.js' } },
 			response: { code: 400 }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass fileSource string',
+			description: 'Should return 400 if not pass fileSource string',
 			request: { data: { fileName: 'test.js', fileSource: 132 } },
 			response: { code: 400 }
 		}]);
 
 		APITest(defaultApiExtended, [{
-			description: 'should return 400 if not pass custom fields in body',
+			description: 'Should return 400 if not pass custom fields in body',
 			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 'asdasd' } },
 			response: { code: 400 }
 		}]);
@@ -125,20 +125,20 @@ describe('SlsApiRelation', () => {
 			bucket: 'test',
 			customFieldsStruct: { type: 'string' }
 		}), [{
-			description: 'should return 400 if pass incorrect custom fields in body',
+			description: 'Should return 400 if pass incorrect custom fields in body',
 			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 132 } },
 			response: { code: 400 }
 		}]);
 	});
 
-	context('test process', () => {
+	context('Process', () => {
 		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(S3, 'headObject').rejects();
 				sandbox.stub(BaseModel.prototype, 'insert');
 			},
 			session: true,
-			description: 'should return 500 if fail headObject',
+			description: 'Should return 500 if fail headObject',
 			request: {
 				data: { fileName: 'test.png', fileSource: 'files/test.png' },
 				pathParameters: [1]
@@ -160,7 +160,7 @@ describe('SlsApiRelation', () => {
 				sandbox.stub(BaseModel.prototype, 'insert').rejects();
 			},
 			session: true,
-			description: 'should return 500 if fail model insert',
+			description: 'Should return 500 if fail model insert',
 			request: {
 				data: { fileName: 'test.png', fileSource: 'files/test.png' },
 				pathParameters: [1]
@@ -181,7 +181,7 @@ describe('SlsApiRelation', () => {
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
-			description: 'should return 200 with valid data',
+			description: 'Should return 200 with valid data',
 			request: {
 				data: { fileName: 'test.png', fileSource: 'files/test.png' },
 				pathParameters: [1]
@@ -215,7 +215,7 @@ describe('SlsApiRelation', () => {
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
-			description: 'should return 200 with valid data and custom fields struct',
+			description: 'Should return 200 with valid data and custom fields struct',
 			request: {
 				data: {
 					fileName: 'test.png',
@@ -299,7 +299,7 @@ describe('SlsApiRelation', () => {
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			session: true,
-			description: `should return 200 passing diferents files types in data (${extension})`,
+			description: `Should return 200 passing diferents files types in data (${extension})`,
 			request: {
 				data: { fileName: `test${extension}`, fileSource: `files/test${extension}` },
 				pathParameters: [1]

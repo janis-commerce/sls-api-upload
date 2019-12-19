@@ -7,6 +7,7 @@ const { SlsApiFileList } = require('../lib/index');
 const BaseModel = require('../lib/base-model');
 
 describe('File List Api', () => {
+
 	class ApiListExample extends SlsApiFileList {}
 
 	afterEach(() => {
@@ -77,7 +78,7 @@ describe('File List Api', () => {
 				sandbox.stub(BaseModel.prototype, 'get')
 					.resolves([]);
 			},
-			description: 'should return empty array in body when not exists rows',
+			description: 'Should return empty array in body when not exists rows',
 			request: {
 				body: []
 			},
@@ -100,7 +101,7 @@ describe('File List Api', () => {
 				sandbox.stub(BaseModel.prototype, 'getTotals')
 					.resolves({ total: 1 });
 			},
-			description: 'should return a body with an array of results, with each row formatted (one row)',
+			description: 'Should return a body with an array of results, with each row formatted (one row)',
 			request: {},
 			session: true,
 			response: {
@@ -127,7 +128,7 @@ describe('File List Api', () => {
 				sandbox.stub(BaseModel.prototype, 'getTotals')
 					.resolves({ total: 2 });
 			},
-			description: 'should return a body with an array of results, with each row formatted (two rows)',
+			description: 'Should return a body with an array of results, with each row formatted (two rows)',
 			request: {},
 			session: true,
 			response: {
@@ -154,7 +155,7 @@ describe('File List Api', () => {
 				sandbox.stub(BaseModel.prototype, 'getTotals')
 					.resolves({ total: 1 });
 			},
-			description: 'should return a body with an array of results, sending a filter',
+			description: 'Should return a body with an array of results, sending a filter',
 			request: {
 				data: { filters: { name: 'test' } }
 			},
@@ -178,7 +179,7 @@ describe('File List Api', () => {
 			}
 		},
 		{
-			description: 'should return a 400 when send a wrong filter',
+			description: 'Should return a 400 when send a wrong filter',
 			request: {
 				data: { filters: { wrongFilter: 'Testing' } }
 			},
@@ -188,7 +189,7 @@ describe('File List Api', () => {
 			}
 		},
 		{
-			description: 'should return a 400 when send a wrong sort',
+			description: 'Should return a 400 when send a wrong sort',
 			request: {
 				data: { sortBy: 'Testing' }
 			},
@@ -200,6 +201,7 @@ describe('File List Api', () => {
 	]);
 
 	describe('Filtering', () => {
+
 		const filters = {
 			id: 2,
 			name: 'test',
@@ -241,6 +243,7 @@ describe('File List Api', () => {
 	});
 
 	describe('Sorting', () => {
+
 		const sorts = [
 			'id',
 			'name',
@@ -251,7 +254,7 @@ describe('File List Api', () => {
 			sorts.reduce((accum, sort) => ([
 				...accum,
 				{
-					description: `'Should pass the "${sort}" sort field to the model asc'`,
+					description: `Should pass the "${sort}" sort field to the model asc`,
 					request: {
 						data: {
 							sortBy: sort
@@ -276,7 +279,7 @@ describe('File List Api', () => {
 					}
 				},
 				{
-					description: `'Should pass the "${sort}" sort field to the model desc'`,
+					description: `Should pass the "${sort}" sort field to the model desc`,
 					request: {
 						data: {
 							sortBy: sort,

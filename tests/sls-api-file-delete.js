@@ -7,6 +7,7 @@ const { SlsApiFileDelete, SlsApiFileDeleteError } = require('../lib/index');
 
 
 describe('SlsApiFileDelete', () => {
+
 	const apiExtendedSimple = ({
 		entityIdField,
 		bucket,
@@ -35,31 +36,31 @@ describe('SlsApiFileDelete', () => {
 	});
 
 
-	context('test validate', () => {
+	context('Validate', () => {
 		APITest(apiExtendedSimple({ model: null }), [{
-			description: 'should return 400 if model is not defined',
+			description: 'Should return 400 if model is not defined',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'should return 400 if model is not a Class',
+			description: 'Should return 400 if model is not a Class',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_IS_NOT_MODEL_CLASS } }
 		}]);
 
 		APITest(apiExtendedSimple(), [{
-			description: 'should return 400 if entityIdField is not defined',
+			description: 'Should return 400 if entityIdField is not defined',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ entityIdField: 123 }), [{
-			description: 'should return 400 if entityIdField is not a string',
+			description: 'Should return 400 if entityIdField is not a string',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.ENTITY_ID_FIELD_NOT_STRING } }
 		}]);
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test'
 		}), [{
-			description: 'should return 400 if bucket is not defined',
+			description: 'Should return 400 if bucket is not defined',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.BUCKET_NOT_DEFINED } }
 		}]);
 
@@ -67,12 +68,12 @@ describe('SlsApiFileDelete', () => {
 			entityIdField: 'test',
 			bucket: 123
 		}), [{
-			description: 'should return 400 if bucket is not a string',
+			description: 'Should return 400 if bucket is not a string',
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.BUCKET_NOT_STRING } }
 		}]);
 	});
 
-	context('test process', () => {
+	context('Process', () => {
 		APITest(defaultApiExtended, [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').rejects();
@@ -80,7 +81,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
-			description: 'should return 500 if fail get current file record',
+			description: 'Should return 500 if fail get current file record',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -101,7 +102,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
-			description: 'should return 500 if fail model remove',
+			description: 'Should return 500 if fail model remove',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -122,7 +123,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject').rejects();
 			},
 			session: true,
-			description: 'should return 500 if fail deleteObject',
+			description: 'Should return 500 if fail deleteObject',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -141,7 +142,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject');
 			},
 			session: true,
-			description: 'should return 404 if not exists current file record',
+			description: 'Should return 404 if not exists current file record',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -162,7 +163,7 @@ describe('SlsApiFileDelete', () => {
 				sandbox.stub(S3, 'deleteObject').resolves();
 			},
 			session: true,
-			description: 'should return 200 if delete record and file correctly',
+			description: 'Should return 200 if delete record and file correctly',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -194,7 +195,7 @@ describe('SlsApiFileDelete', () => {
 				});
 			},
 			session: true,
-			description: 'should return 200 if delete record correctly but file not exist in s3',
+			description: 'Should return 200 if delete record correctly but file not exist in s3',
 			request: {
 				pathParameters: [1, 2]
 			},

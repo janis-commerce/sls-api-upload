@@ -9,6 +9,7 @@ const { SlsApiFileGet, SlsApiFileGetError } = require('../lib/index');
 
 
 describe('SlsApiFileGet', () => {
+
 	const url =
 		'https://bucket.s3.amazonaws.com/files/a87a83d3-f494-4069-a0f7-fa0894590072.png?AWSAccessKeyId=0&Expires=0&Signature=0';
 
@@ -66,14 +67,14 @@ describe('SlsApiFileGet', () => {
 	});
 
 
-	context('test validate', () => {
+	context('Validate', () => {
 		APITest(apiExtendedSimple(), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 				sandbox.stub(S3, 'getSignedUrl');
 			},
 			request: {},
-			description: 'should return 500 if bucket is not defined',
+			description: 'Should return 500 if bucket is not defined',
 			session: true,
 			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_DEFINED } }
 		}]);
@@ -83,21 +84,21 @@ describe('SlsApiFileGet', () => {
 				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 				sandbox.stub(S3, 'getSignedUrl');
 			},
-			description: 'should return 500 if bucket is not a string',
+			description: 'Should return 500 if bucket is not a string',
 			request: {},
 			session: true,
 			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_STRING } }
 		}]);
 	});
 
-	context('test process', () => {
+	context('Process', () => {
 		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
 			before: sandbox => {
 				sandbox.stub(BaseModel.prototype, 'get').rejects();
 				sandbox.stub(S3, 'getSignedUrl');
 			},
 			session: true,
-			description: 'should return 500. if fail get current file record',
+			description: 'Should return 500. if fail get current file record',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -114,7 +115,7 @@ describe('SlsApiFileGet', () => {
 				sandbox.stub(S3, 'getSignedUrl').rejects();
 			},
 			session: true,
-			description: 'should return 500 if fail getSignedUrl',
+			description: 'Should return 500 if fail getSignedUrl',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -131,7 +132,7 @@ describe('SlsApiFileGet', () => {
 				sandbox.stub(S3, 'getSignedUrl');
 			},
 			session: true,
-			description: 'should return 404 if not exists current file record',
+			description: 'Should return 404 if not exists current file record',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -148,7 +149,7 @@ describe('SlsApiFileGet', () => {
 				sandbox.stub(S3, 'getSignedUrl').resolves(url);
 			},
 			session: true,
-			description: 'should return 200 if get file and get url correctly',
+			description: 'Should return 200 if get file and get url correctly',
 			request: {
 				pathParameters: [1, 2]
 			},
@@ -170,7 +171,7 @@ describe('SlsApiFileGet', () => {
 				});
 			},
 			session: true,
-			description: 'should return 200 with valid data but file not exist in s3',
+			description: 'Should return 200 with valid data but file not exist in s3',
 			request: {
 				pathParameters: [1, 2]
 			},

@@ -3,9 +3,9 @@
 const assert = require('assert');
 const BaseModel = require('../lib/base-model');
 
-describe('Model builder', () => {
+describe('Base Model', () => {
 
-	it('Model only', () => {
+	it('Should have the proper default getters', () => {
 		assert.strictEqual(BaseModel.table, 'files');
 
 		assert.deepStrictEqual(BaseModel.fields, {
@@ -18,7 +18,8 @@ describe('Model builder', () => {
 		});
 	});
 
-	it('Model extended', () => {
+	it('Should allow to override the getters', () => {
+
 		class ModelTest extends BaseModel {
 			static get table() {
 				return 'entity_files';
