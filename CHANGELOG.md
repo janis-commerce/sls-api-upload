@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.1.0] - 2019-12-19
+### Added
+- API to relate files now has a default behaviour
+- API to list files
+- API to get a file
+- API to remove a file
+- Base model to extend for file handling
+
 ## [1.0.0] - 2019-11-08
 ### Added
 - Package first version with Upload an Relate APIs
