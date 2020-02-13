@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.1.1] - 2020-02-13
+### Fixed
+- File removal fixed for mongodb
+
 ## [1.1.0] - 2019-12-19
 ### Added
 - API to relate files now has a default behaviour
