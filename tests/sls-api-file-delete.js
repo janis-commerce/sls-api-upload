@@ -173,9 +173,7 @@ describe('SlsApiFileDelete', () => {
 					filters: { test: 1, id: 2 }
 				});
 
-				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, {
-					filters: { test: 1, id: 2 }
-				});
+				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
 
 				sandbox.assert.calledWithExactly(S3.deleteObject, {
 					Bucket: 'test',
@@ -205,9 +203,7 @@ describe('SlsApiFileDelete', () => {
 					filters: { test: 1, id: 2 }
 				});
 
-				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, {
-					filters: { test: 1, id: 2 }
-				});
+				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
 
 				sandbox.assert.calledWithExactly(S3.deleteObject, {
 					Bucket: 'test',
