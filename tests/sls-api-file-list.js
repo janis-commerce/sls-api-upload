@@ -2,13 +2,12 @@
 
 const globalSandbox = require('sinon').createSandbox();
 const APITest = require('@janiscommerce/api-test');
+const S3 = require('@janiscommerce/s3');
 const { ApiListData } = require('@janiscommerce/api-list');
-const { SlsApiFileList } = require('../lib/index');
+const { SlsApiFileList, SlsApiFileListError } = require('../lib/index');
 const BaseModel = require('../lib/base-model');
 
 describe('File List Api', () => {
-
-	class ApiListExample extends SlsApiFileList {}
 
 	afterEach(() => {
 		globalSandbox.restore();
@@ -17,6 +16,15 @@ describe('File List Api', () => {
 	beforeEach(() => {
 		globalSandbox.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
 	});
+
+	const url =
+		'https://bucket.s3.amazonaws.com/file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg?AWSAccessKeyId=0&Expires=0&Signature=0';
+
+	const bucketParams = {
+		Bucket: 'test',
+		Key: 'file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg',
+		ResponseContentDisposition: 'attachment; filename="what.jpeg"'
+	};
 
 	const rowGetted = {
 		id: 20,
@@ -53,6 +61,7 @@ describe('File List Api', () => {
 		size: 5014,
 		mimeType: 'image/jpeg',
 		type: 'image',
+		url,
 		dateCreated: 1576269240,
 		userCreated: 5,
 		dateModified: 1576272801,
@@ -72,133 +81,260 @@ describe('File List Api', () => {
 		userModified: null
 	};
 
-	APITest(ApiListExample, [
-		{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get')
-					.resolves([]);
-			},
-			description: 'Should return empty array in body when not exists rows',
-			request: {
-				body: []
-			},
-			session: true,
-			response: {
-				code: 200
-			},
-			after: (response, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					limit: 60,
-					page: 1
-				});
-			}
-		},
-		{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get')
-					.resolves([rowGetted]);
-				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.resolves({ total: 1 });
-			},
-			description: 'Should return a body with an array of results, with each row formatted (one row)',
-			request: {},
-			session: true,
-			response: {
-				body: [rowFormatted],
-				headers: {
-					'x-janis-total': 1
-				},
-				code: 200
-			},
-			after: (response, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.calledOnce(BaseModel.prototype.getTotals);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.getTotals);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					limit: 60,
-					page: 1
-				});
-			}
-		},
-		{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get')
-					.resolves([rowGetted, rowGetted2]);
-				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.resolves({ total: 2 });
-			},
-			description: 'Should return a body with an array of results, with each row formatted (two rows)',
-			request: {},
-			session: true,
-			response: {
-				body: [rowFormatted, rowFormatted2],
-				headers: {
-					'x-janis-total': 2
-				},
-				code: 200
-			},
-			after: (response, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.calledOnce(BaseModel.prototype.getTotals);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.getTotals);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					limit: 60,
-					page: 1
-				});
-			}
-		},
-		{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get')
-					.resolves([rowGetted]);
-				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.resolves({ total: 1 });
-			},
-			description: 'Should return a body with an array of results, sending a filter',
-			request: {
-				data: { filters: { name: 'test' } }
-			},
-			session: true,
-			response: {
-				body: [rowFormatted],
-				headers: {
-					'x-janis-total': 1
-				},
-				code: 200
-			},
-			after: (response, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					filters: { name: 'test' },
-					limit: 60,
-					page: 1
-				});
-				sandbox.assert.calledOnce(BaseModel.prototype.getTotals);
-				sandbox.assert.calledWithExactly(BaseModel.prototype.getTotals);
-			}
-		},
-		{
-			description: 'Should return a 400 when send a wrong filter',
-			request: {
-				data: { filters: { wrongFilter: 'Testing' } }
-			},
-			session: true,
-			response: {
-				code: 400
-			}
-		},
-		{
-			description: 'Should return a 400 when send a wrong sort',
-			request: {
-				data: { sortBy: 'Testing' }
-			},
-			session: true,
-			response: {
-				code: 400
+	const apiExtendedSimple = ({
+		bucket
+	} = {}) => {
+		class API extends SlsApiFileList {
+			get bucket() {
+				return bucket;
 			}
 		}
-	]);
+
+		return API;
+	};
+
+	context('When no Bucket is setted and return images types', () => {
+		APITest(apiExtendedSimple(), [{
+			before: sandbox => {
+				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+				sandbox.stub(BaseModel.prototype, 'getTotals')
+					.resolves({ total: 1 });
+				sandbox.stub(S3, 'getSignedUrl');
+			},
+			request: {},
+			description: 'Should return 500 if bucket is not defined',
+			session: true,
+			response: { code: 500, body: { message: SlsApiFileListError.messages.BUCKET_NOT_DEFINED } }
+		}]);
+
+		APITest(apiExtendedSimple({ bucket: 123 }), [{
+			before: sandbox => {
+				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+				sandbox.stub(BaseModel.prototype, 'getTotals')
+					.resolves({ total: 1 });
+				sandbox.stub(S3, 'getSignedUrl');
+			},
+			description: 'Should return 500 if bucket is not a string',
+			request: {},
+			session: true,
+			response: { code: 500, body: { message: SlsApiFileListError.messages.BUCKET_NOT_STRING } }
+		}]);
+	});
+
+	context('When Bucket is setted', () => {
+		APITest(apiExtendedSimple({ bucket: 'test' }), [
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([]);
+				},
+				description: 'Should return empty array in body when not exists rows',
+				request: {
+					body: []
+				},
+				session: true,
+				response: {
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				description: 'Should return a body with an array of results, with each row formatted (one row)',
+				request: {},
+				session: true,
+				response: {
+					body: [rowFormatted],
+					headers: {
+						'x-janis-total': 1
+					},
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted, rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 2 });
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				description: 'Should return a body with an array of results, with each row formatted (two image type row)',
+				request: {},
+				session: true,
+				response: {
+					body: [rowFormatted, rowFormatted],
+					headers: {
+						'x-janis-total': 2
+					},
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.calledTwice(S3.getSignedUrl);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').rejects();
+				},
+				description: 'Should return 500 if fail getSignedUrl',
+				request: {},
+				session: true,
+				response: {
+					code: 500
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').rejects({
+						statusCode: 404
+					});
+				},
+				description: 'Should return 200 with valid data but file not exist in s3',
+				request: {},
+				session: true,
+				response: {
+					body: [{ ...rowFormatted, url: null }],
+					headers: {
+						'x-janis-total': 1
+					},
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted, rowGetted2]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 2 });
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				description: 'Should return a body with an array of results, with each row formatted (two rows)',
+				request: {},
+				session: true,
+				response: {
+					body: [rowFormatted, rowFormatted2],
+					headers: {
+						'x-janis-total': 2
+					},
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get')
+						.resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals')
+						.resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				description: 'Should return a body with an array of results, sending a filter',
+				request: {
+					data: { filters: { name: 'test' } }
+				},
+				session: true,
+				response: {
+					body: [rowFormatted],
+					headers: {
+						'x-janis-total': 1
+					},
+					code: 200
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						filters: { name: 'test' },
+						limit: 60,
+						page: 1
+					});
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				description: 'Should return a 400 when send a wrong filter',
+				request: {
+					data: { filters: { wrongFilter: 'Testing' } }
+				},
+				session: true,
+				response: {
+					code: 400
+				}
+			},
+			{
+				description: 'Should return a 400 when send a wrong sort',
+				request: {
+					data: { sortBy: 'Testing' }
+				},
+				session: true,
+				response: {
+					code: 400
+				}
+			}
+		]);
+	});
 
 	describe('Filtering', () => {
 
@@ -208,7 +344,7 @@ describe('File List Api', () => {
 			dateCreated: '2019-02-22T21:30:59.000Z'
 		};
 
-		APITest(ApiListExample, Object.keys(filters).map(key => {
+		APITest(apiExtendedSimple(), Object.keys(filters).map(key => {
 			const filter = filters[key];
 			const filterValue = key === 'dateCreated' ? new Date(filters[key]) : filters[key];
 
@@ -229,8 +365,7 @@ describe('File List Api', () => {
 					BaseModel.prototype.get.returns([]);
 				},
 				after: (response, sandbox) => {
-					sandbox.assert.calledOnce(BaseModel.prototype.get);
-					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 						page: 1,
 						limit: 60,
 						filters: {
@@ -250,7 +385,7 @@ describe('File List Api', () => {
 			'dateCreated'
 		];
 
-		APITest(ApiListExample,
+		APITest(apiExtendedSimple(),
 			sorts.reduce((accum, sort) => ([
 				...accum,
 				{
@@ -268,8 +403,7 @@ describe('File List Api', () => {
 						BaseModel.prototype.get.resolves([]);
 					},
 					after: (response, sandbox) => {
-						sandbox.assert.calledOnce(BaseModel.prototype.get);
-						sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 							page: 1,
 							limit: 60,
 							order: {
@@ -294,8 +428,7 @@ describe('File List Api', () => {
 						BaseModel.prototype.get.resolves([]);
 					},
 					after: (response, sandbox) => {
-						sandbox.assert.calledOnce(BaseModel.prototype.get);
-						sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 							page: 1,
 							limit: 60,
 							order: {
