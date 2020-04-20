@@ -327,6 +327,18 @@ get availableFilters() {
 }
 ```
 
+### get bucket()
+
+*Required for Image type items*
+
+This is used to indicate the bucket where the file is.
+
+```js
+get bucket() {
+	return 'bucket-name';
+}
+```
+
 This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
 
 ## Usage SlsApiFileGet Module
