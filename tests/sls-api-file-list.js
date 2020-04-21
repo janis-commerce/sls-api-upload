@@ -234,7 +234,7 @@ describe('File List Api', () => {
 						statusCode: 404
 					});
 				},
-				description: 'Should return 200 with valid data but file not exist in s3',
+				description: 'Should return 200 with valid data if file does not exist in s3',
 				request: {},
 				session: true,
 				response: {
