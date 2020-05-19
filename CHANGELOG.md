@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.0] - 2020-05-19
+### Removed
+- `package-lock.json` file
+
 ## [1.2.0] - 2020-04-24
 ### Added
 - `url` field in API list when file type is 'image'
