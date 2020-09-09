@@ -5,7 +5,6 @@ const S3 = require('@janiscommerce/s3');
 const globalSandbox = require('sinon').createSandbox();
 const { SlsApiUpload, SlsApiUploadError } = require('../lib/index');
 
-
 const mockS3 = () => {
 	globalSandbox.stub(S3, 'createPresignedPost').resolves({ url: 'URL', fields: {} });
 };
