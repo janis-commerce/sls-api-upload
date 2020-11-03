@@ -1,6 +1,6 @@
 'use strict';
 
-const glabalSandbox = require('sinon').createSandbox();
+const globalSandbox = require('sinon').createSandbox();
 const APITest = require('@janiscommerce/api-test');
 const S3 = require('@janiscommerce/s3');
 const { ApiGet } = require('@janiscommerce/api-get');
@@ -58,131 +58,220 @@ describe('SlsApiFileGet', () => {
 		return API;
 	};
 
+	const defaultApiExtended = apiExtendedSimple({ bucket: 'test' });
+
+	const apiCustom = ({
+		postValidateHook = () => true,
+		formatRecord = data => data
+	}) => class CustomApi extends defaultApiExtended {
+
+		postValidateHook() {
+			return postValidateHook();
+		}
+
+		formatRecord(data) {
+			return formatRecord(data);
+		}
+	};
+
 	afterEach(() => {
-		glabalSandbox.restore();
+		globalSandbox.restore();
 	});
 
 	beforeEach(() => {
-		glabalSandbox.stub(ApiGet.prototype, '_getModelInstance').returns(new BaseModel());
+		globalSandbox.stub(ApiGet.prototype, '_getModelInstance').returns(new BaseModel());
 	});
 
 
 	context('Validate', () => {
+
 		APITest(apiExtendedSimple(), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(S3, 'getSignedUrl');
-			},
-			request: {},
 			description: 'Should return 500 if bucket is not defined',
 			session: true,
-			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_DEFINED } }
+			response: { code: 400, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_DEFINED } },
+			request: {}
 		}]);
 
 		APITest(apiExtendedSimple({ bucket: 123 }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(S3, 'getSignedUrl');
-			},
 			description: 'Should return 500 if bucket is not a string',
 			request: {},
 			session: true,
-			response: { code: 500, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_STRING } }
+			response: { code: 400, body: { message: SlsApiFileGetError.messages.BUCKET_NOT_STRING } }
+		}]);
+
+		APITest(apiCustom({
+			postValidateHook: () => { throw new Error('Fails'); }
+		}), 'api/entity/1/file/2', [{
+			description: 'Should return 400, if fail custom Validation',
+			session: true,
+			request: {
+				pathParameters: [1, 2]
+			},
+			response: { code: 400 }
 		}]);
 	});
 
 	context('Process', () => {
-		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').rejects();
-				sandbox.stub(S3, 'getSignedUrl');
+
+		APITest(defaultApiExtended, 'api/entity/1/file/2', [
+			{
+				description: 'Should return 500. if fail get current file record',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 500 },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').rejects();
+					sandbox.stub(S3, 'getSignedUrl');
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledOnce(BaseModel.prototype.get);
+					sandbox.assert.notCalled(S3.getSignedUrl);
+				}
 			},
-			session: true,
-			description: 'Should return 500. if fail get current file record',
-			request: {
-				pathParameters: [1, 2]
+			{
+				description: 'Should return 500 if fail getSignedUrl',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 500 },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').rejects();
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledOnce(BaseModel.prototype.get);
+					sandbox.assert.calledOnce(S3.getSignedUrl);
+				}
 			},
-			response: { code: 500 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.notCalled(S3.getSignedUrl);
+			{
+				description: 'Should return 404 if not exists current file record',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 404, body: { message: 'common.message.notFound' } },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+					sandbox.stub(S3, 'getSignedUrl');
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledOnce(BaseModel.prototype.get);
+					sandbox.assert.notCalled(S3.getSignedUrl);
+				}
+			},
+			{
+				description: 'Should return 200 if get file and get url correctly',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 200, body: { ...rowFormatted, url } },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						filters: { entity: '1', id: '2' }, limit: 1, page: 1
+					});
+
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
+			},
+			{
+				description: 'Should return 200 with valid data but file not exist in s3',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 200, body: { ...rowFormatted, url: null } },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').rejects({
+						statusCode: 404
+					});
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						filters: { entity: '1', id: '2' }, limit: 1, page: 1
+					});
+
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
 			}
-		}]);
+		]);
 
-		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(S3, 'getSignedUrl').rejects();
-			},
-			session: true,
-			description: 'Should return 500 if fail getSignedUrl',
-			request: {
-				pathParameters: [1, 2]
-			},
-			response: { code: 500 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.calledOnce(S3.getSignedUrl);
+		APITest(apiCustom({}), 'api/entity/1/file/2', [
+			{
+				description: 'Should return 200 with custom validation',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 200, body: { ...rowFormatted, url } },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						filters: { entity: '1', id: '2' }, limit: 1, page: 1
+					});
+
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
 			}
-		}]);
+		]);
 
-		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([]);
-				sandbox.stub(S3, 'getSignedUrl');
-			},
-			session: true,
-			description: 'Should return 404 if not exists current file record',
-			request: {
-				pathParameters: [1, 2]
-			},
-			response: { code: 404, body: { message: 'common.message.notFound' } },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledOnce(BaseModel.prototype.get);
-				sandbox.assert.notCalled(S3.getSignedUrl);
+		APITest(apiCustom({
+			formatRecord: () => { throw new Error(); }
+		}), 'api/entity/1/file/2', [
+			{
+				description: 'Should return 500 if fails formatRecord',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 500 },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						filters: { entity: '1', id: '2' }, limit: 1, page: 1
+					});
+
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
 			}
-		}]);
+		]);
 
-		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(S3, 'getSignedUrl').resolves(url);
-			},
-			session: true,
-			description: 'Should return 200 if get file and get url correctly',
-			request: {
-				pathParameters: [1, 2]
-			},
-			response: { code: 200, body: { ...rowFormatted, url } },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					filters: { entity: '1', id: '2' }, limit: 1, page: 1
-				});
+		APITest(apiCustom({
+			formatRecord: data => ({ ...data, order: 1 })
+		}), 'api/entity/1/file/2', [
+			{
+				description: 'Should return 200 with custom format adding field',
+				session: true,
+				request: {
+					pathParameters: [1, 2]
+				},
+				response: { code: 200, body: { ...rowFormatted, url, order: 1 } },
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
+						filters: { entity: '1', id: '2' }, limit: 1, page: 1
+					});
 
-				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+				}
 			}
-		}]);
-
-		APITest(apiExtendedSimple({ bucket: 'test' }), 'api/entity/1/file/2', [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(S3, 'getSignedUrl').rejects({
-					statusCode: 404
-				});
-			},
-			session: true,
-			description: 'Should return 200 with valid data but file not exist in s3',
-			request: {
-				pathParameters: [1, 2]
-			},
-			response: { code: 200, body: { ...rowFormatted, url: null } },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
-					filters: { entity: '1', id: '2' }, limit: 1, page: 1
-				});
-
-				sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
-			}
-		}]);
+		]);
 	});
 });

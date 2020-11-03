@@ -39,7 +39,7 @@ describe('SlsApiRelation', () => {
 	const apiCustom = ({
 		postValidateHook = () => true,
 		postSaveHook = () => true,
-		format = () => true
+		format = data => data
 	}) => class CustomApi extends defaultApiExtended {
 
 		postValidateHook() {
@@ -145,7 +145,10 @@ describe('SlsApiRelation', () => {
 			postValidateHook: () => { throw new Error('Fails Validate'); }
 		}), [{
 			description: 'Should return 400 if not pass custom validation',
-			request: { data: { fileName: 'test.js', fileSource: 'files/test.js', type: 'asdasd' } },
+			request: {
+				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				pathParameters: [1]
+			},
 			response: { code: 400 }
 		}]);
 	});
