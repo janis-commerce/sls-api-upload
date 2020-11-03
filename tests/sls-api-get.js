@@ -62,15 +62,15 @@ describe('SlsApiFileGet', () => {
 
 	const apiCustom = ({
 		postValidateHook = () => true,
-		formatRecord = data => data
+		formatFileData = data => data
 	}) => class CustomApi extends defaultApiExtended {
 
 		postValidateHook() {
 			return postValidateHook();
 		}
 
-		formatRecord(data) {
-			return formatRecord(data);
+		formatFileData(data) {
+			return formatFileData(data);
 		}
 	};
 
@@ -227,10 +227,10 @@ describe('SlsApiFileGet', () => {
 		]);
 
 		APITest(apiCustom({
-			formatRecord: () => { throw new Error(); }
+			formatFileData: () => { throw new Error(); }
 		}), 'api/entity/1/file/2', [
 			{
-				description: 'Should return 500 if fails formatRecord',
+				description: 'Should return 500 if fails formatFileData',
 				session: true,
 				request: {
 					pathParameters: [1, 2]
@@ -251,7 +251,7 @@ describe('SlsApiFileGet', () => {
 		]);
 
 		APITest(apiCustom({
-			formatRecord: data => ({ ...data, order: 1 })
+			formatFileData: data => ({ ...data, order: 1 })
 		}), 'api/entity/1/file/2', [
 			{
 				description: 'Should return 200 with custom format adding field',

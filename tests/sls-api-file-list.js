@@ -82,59 +82,126 @@ describe('File List Api', () => {
 	};
 
 	const apiExtendedSimple = ({
-		bucket
-	} = {}) => {
-		class API extends SlsApiFileList {
-			get bucket() {
-				return bucket;
-			}
+		bucket,
+		shouldAddUrl = false
+	} = {}) => class API extends SlsApiFileList {
+
+		get bucket() {
+			return bucket;
 		}
 
-		return API;
+		get shouldAddUrl() {
+			return shouldAddUrl;
+		}
 	};
 
-	context('When no Bucket is setted and return images types', () => {
-		APITest(apiExtendedSimple(), [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.resolves({ total: 1 });
-				sandbox.stub(S3, 'getSignedUrl');
-			},
-			request: {},
-			description: 'Should return 500 if bucket is not defined',
-			session: true,
-			response: { code: 500, body: { message: SlsApiFileListError.messages.BUCKET_NOT_DEFINED } }
-		}]);
+	const apiCustom = ({
+		bucket,
+		postValidateHook = () => true,
+		formatFileData = data => data,
+		customAvailableFilters = [],
+		customSortableFields = []
+	} = {}) => class API extends SlsApiFileList {
 
-		APITest(apiExtendedSimple({ bucket: 123 }), [{
-			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-				sandbox.stub(BaseModel.prototype, 'getTotals')
-					.resolves({ total: 1 });
-				sandbox.stub(S3, 'getSignedUrl');
-			},
-			description: 'Should return 500 if bucket is not a string',
-			request: {},
-			session: true,
-			response: { code: 500, body: { message: SlsApiFileListError.messages.BUCKET_NOT_STRING } }
-		}]);
-	});
+		get bucket() {
+			return bucket;
+		}
 
-	context('When Bucket is setted', () => {
-		APITest(apiExtendedSimple({ bucket: 'test' }), [
+		get customAvailableFilters() {
+			return customAvailableFilters;
+		}
+
+		get customSortableFields() {
+			return customSortableFields;
+		}
+
+		postValidateHook() {
+			return postValidateHook();
+		}
+
+		formatFileData(data) {
+			return formatFileData(data);
+		}
+	};
+
+	context('When Should not add url', () => {
+
+		APITest(apiCustom({
+			postValidateHook: () => { throw new Error(); }
+		}), [
 			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([]);
-				},
-				description: 'Should return empty array in body when not exists rows',
-				request: {
-					body: []
-				},
+				description: 'Should return 400 if custom validation fails',
 				session: true,
 				response: {
-					code: 200
+					code: 400
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get');
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.notCalled(BaseModel.prototype.get);
+				}
+			}
+		]);
+
+		APITest(apiCustom({
+			formatFileData: () => { throw new Error(); }
+		}), [
+			{
+				description: 'Should return 500 if custom format fails',
+				session: true,
+				response: {
+					code: 500
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+				}
+			}
+		]);
+
+		APITest(apiCustom({
+			formatFileData: data => ({ ...data, order: 1 })
+		}), [
+			{
+				description: 'Should return 200 and field in custom format',
+				session: true,
+				response: {
+					code: 200,
+					body: [{
+						...rowFormatted2,
+						order: 1
+					}]
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted2]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+				}
+			}
+		]);
+
+		APITest(apiExtendedSimple(), [
+			{
+				description: 'Should return empty array in body when not exists rows',
+				session: true,
+				response: {
+					code: 200,
+					body: []
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -144,14 +211,70 @@ describe('File List Api', () => {
 				}
 			},
 			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				description: 'Should return a body with an array of results',
+				request: {},
+				session: true,
+				response: {
+					body: [rowFormatted2],
+					headers: {
+						'x-janis-total': 1
+					},
+					code: 200
 				},
-				description: 'Should return a body with an array of results, with each row formatted (one row)',
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted2]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+				}
+			}
+		]);
+	});
+
+	context('When Bucket is not setted but should add Url', () => {
+
+		APITest(apiExtendedSimple({ shouldAddUrl: true }), [{
+			request: {},
+			description: 'Should return 400 if bucket is not defined',
+			session: true,
+			response: { code: 400, body: { message: SlsApiFileListError.messages.BUCKET_NOT_DEFINED } }
+		}]);
+
+		APITest(apiExtendedSimple({ bucket: 123, shouldAddUrl: true }), [{
+			description: 'Should return 400 if bucket is not a string',
+			request: {},
+			session: true,
+			response: { code: 400, body: { message: SlsApiFileListError.messages.BUCKET_NOT_STRING } }
+		}]);
+	});
+
+	context('When Bucket is setted', () => {
+
+		APITest(apiExtendedSimple({ bucket: 'test', shouldAddUrl: true }), [
+			{
+				description: 'Should return empty array in body when not exists rows',
+				session: true,
+				response: {
+					code: 200,
+					body: []
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+				}
+			},
+			{
+				description: 'Should return a body with an array of results with url formatted',
 				request: {},
 				session: true,
 				response: {
@@ -161,6 +284,11 @@ describe('File List Api', () => {
 					},
 					code: 200
 				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -172,48 +300,17 @@ describe('File List Api', () => {
 				}
 			},
 			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted, rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 2 });
-					sandbox.stub(S3, 'getSignedUrl').resolves(url);
-				},
-				description: 'Should return a body with an array of results, with each row formatted (two image type row)',
-				request: {},
-				session: true,
-				response: {
-					body: [rowFormatted, rowFormatted],
-					headers: {
-						'x-janis-total': 2
-					},
-					code: 200
-				},
-				after: (response, sandbox) => {
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
-						limit: 60,
-						page: 1
-					});
-
-					sandbox.assert.calledTwice(S3.getSignedUrl);
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
-				}
-			},
-			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').rejects();
-				},
-				description: 'Should return 500 if fail getSignedUrl',
+				description: 'Should return 500 if Sign URL fails',
 				request: {},
 				session: true,
 				response: {
 					code: 500
 				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').rejects();
+				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -225,15 +322,6 @@ describe('File List Api', () => {
 				}
 			},
 			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').rejects({
-						statusCode: 404
-					});
-				},
 				description: 'Should return 200 with valid data if file does not exist in s3',
 				request: {},
 				session: true,
@@ -244,33 +332,12 @@ describe('File List Api', () => {
 					},
 					code: 200
 				},
-				after: (response, sandbox) => {
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
-						limit: 60,
-						page: 1
-					});
-
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
-				}
-			},
-			{
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted, rowGetted2]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 2 });
-					sandbox.stub(S3, 'getSignedUrl').resolves(url);
-				},
-				description: 'Should return a body with an array of results, with each row formatted (two rows)',
-				request: {},
-				session: true,
-				response: {
-					body: [rowFormatted, rowFormatted2],
-					headers: {
-						'x-janis-total': 2
-					},
-					code: 200
+					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(S3, 'getSignedUrl').rejects({
+						statusCode: 404
+					});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -280,57 +347,6 @@ describe('File List Api', () => {
 					});
 
 					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
-				}
-			},
-			{
-				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get')
-						.resolves([rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals')
-						.resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').resolves(url);
-				},
-				description: 'Should return a body with an array of results, sending a filter',
-				request: {
-					data: { filters: { name: 'test' } }
-				},
-				session: true,
-				response: {
-					body: [rowFormatted],
-					headers: {
-						'x-janis-total': 1
-					},
-					code: 200
-				},
-				after: (response, sandbox) => {
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
-						filters: { name: 'test' },
-						limit: 60,
-						page: 1
-					});
-					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
-
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
-				}
-			},
-			{
-				description: 'Should return a 400 when send a wrong filter',
-				request: {
-					data: { filters: { wrongFilter: 'Testing' } }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
-			},
-			{
-				description: 'Should return a 400 when send a wrong sort',
-				request: {
-					data: { sortBy: 'Testing' }
-				},
-				session: true,
-				response: {
-					code: 400
 				}
 			}
 		]);
@@ -377,6 +393,48 @@ describe('File List Api', () => {
 		}));
 	});
 
+	describe('Custom Filters', () => {
+
+		const filters = {
+			id: 2,
+			name: 'test',
+			dateCreated: '2019-02-22T21:30:59.000Z',
+			order: 1
+		};
+
+		APITest(apiCustom({ customAvailableFilters: ['order'] }), Object.keys(filters).map(key => {
+			const filter = filters[key];
+			const filterValue = key === 'dateCreated' ? new Date(filters[key]) : filters[key];
+
+			return {
+				description: `Should pass the ${key}=${filter} filter with to the model`,
+				request: {
+					data: {
+						filters: {
+							[key]: filter
+						}
+					}
+				},
+				response: {
+					code: 200
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get');
+					BaseModel.prototype.get.returns([]);
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						page: 1,
+						limit: 60,
+						filters: {
+							[key]: filterValue
+						}
+					});
+				}
+			};
+		}));
+	});
+
 	describe('Sorting', () => {
 
 		const sorts = [
@@ -386,6 +444,71 @@ describe('File List Api', () => {
 		];
 
 		APITest(apiExtendedSimple(),
+			sorts.reduce((accum, sort) => ([
+				...accum,
+				{
+					description: `Should pass the "${sort}" sort field to the model asc`,
+					request: {
+						data: {
+							sortBy: sort
+						}
+					},
+					response: {
+						code: 200
+					},
+					before: sandbox => {
+						sandbox.stub(BaseModel.prototype, 'get');
+						BaseModel.prototype.get.resolves([]);
+					},
+					after: (response, sandbox) => {
+						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+							page: 1,
+							limit: 60,
+							order: {
+								[sort]: 'asc'
+							}
+						});
+					}
+				},
+				{
+					description: `Should pass the "${sort}" sort field to the model desc`,
+					request: {
+						data: {
+							sortBy: sort,
+							sortDirection: 'desc'
+						}
+					},
+					response: {
+						code: 200
+					},
+					before: sandbox => {
+						sandbox.stub(BaseModel.prototype, 'get');
+						BaseModel.prototype.get.resolves([]);
+					},
+					after: (response, sandbox) => {
+						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+							page: 1,
+							limit: 60,
+							order: {
+								[sort]: 'desc'
+							}
+						});
+					}
+				}
+			]), [])
+		);
+	});
+
+	describe('Custom Sorting', () => {
+
+		const sorts = [
+			'id',
+			'name',
+			'dateCreated',
+			'order'
+		];
+
+		APITest(apiCustom({ customSortableFields: ['order'] }),
 			sorts.reduce((accum, sort) => ([
 				...accum,
 				{
