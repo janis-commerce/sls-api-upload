@@ -1,23 +1,65 @@
 # sls-api-upload
 
-[![Build Status](https://travis-ci.org/janis-commerce/sls-api-upload.svg?branch=master)](https://travis-ci.org/janis-commerce/sls-api-upload)
+![Build Status](https://github.com/janis-commerce/sls-api-upload/workflows/Build%20Status/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/sls-api-upload/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/sls-api-upload?branch=master)
 
-A package to handle Janis file upload APIs.
+This package contains several modules to handle **Janis** file upload APIs.
 
 ## Installation
 ```sh
 npm install @janiscommerce/sls-api-upload
 ```
 
-## Usage SlsApiUpload Module
+## Content
+
+In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
+
+* A [Basic Model](#BaseFileModel)
+* APIs for **Upload** and **Save** Files
+	* [SLS-API-Upload](#SlsApiUpload)
+	* [SLS-API-File-Relation](#SlsApiFileRelation)
+* APIs for **List** and **Get** Files
+	* [SLS-API-List](#SlsApiFileList)
+	* [SLS-API-Get](#SlsApiFileGet)
+* API for **Delete** Files
+	* [SLS-API-Delete](#SlsApiFileDelete)
+
+Every Module can be customize.
+
+## Common Validation
+
+Some APIs Modules offers some custom validation for specfics features such as file size, or file type, but everyone has a common validation hook.
+
+### postValidateHook()
+
+In order to add some custom validations you can use re-write this method, can be async, if fails the status-code is setted to `400` by default. If it exist, executes after `validate()` and before `process()`.
 
 ```js
+class MyApiUpload extends SlsApiUpload {
+
+	// ... other code
+	postValidateHook() {
+
+		if(!Controller.isValidData(this.data))
+			throw new Error('Invalid Data');
+	}
+};
+```
+
+## SlsApiUpload
+
+<details>
+	<summary>This Module allows you to create an API to get a valid pre-signed URL and headers in order to upload a file to a S3 Bucket.</summary>
+
+### API Example
+
+```js
+// in src/api/item/file-upload/list.js
 'use strict';
 
 const { SlsApiUpload } = require('@janiscommerce/sls-api-upload');
 
-class MyApiUpload extends SlsApiUpload {
+module.exports = class MyApiUpload extends SlsApiUpload {
 	get bucket() {
 		return 'bucket-name';
 	}
@@ -27,7 +69,7 @@ class MyApiUpload extends SlsApiUpload {
 	}
 
 	get availableTypes() {
-		return ['image/jpg', 'image/jpeg', 'image/png']
+		return ['application/pdf']
 	}
 
 	get expiration() {
@@ -37,13 +79,11 @@ class MyApiUpload extends SlsApiUpload {
 	get sizeRange() {
 		return [1, 1024 * 1024 * 5]; // 1byte - 5mb
 	}
-}
-
-module.exports = MyApiUpload;
+};
 
 ```
 
-Request data example;
+### Request Example
 
 ```js
 {
@@ -51,10 +91,32 @@ Request data example;
 }
 ```
 
-The following getters can be used to customize and validate your SlsApiUpload.
+### Response Example
+
+```js
+{
+	url: 'https://s3.amazonaws.com/bucket-name',
+	fields: {
+		'Content-Type': 'image/jpg',
+		key: 'files/06311e0c-6f32-4a13-93e4-c89a7765e571.jpg',
+		bucket: 'bucket-name',
+		'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+		'X-Amz-Credential': 'AAAAAAA99BB0BOCCCCCC/10000000/us-east-2/s3/aws4_request',
+		'X-Amz-Date': '20200406T185857Z',
+		Policy: 'eyJleHBpcmF0aW9uIjoiMjAyMC0wNC0wNlQxODo1OTo1N1oiLCJjb25kaXRpb25zIjpbWyJjb250ZW5=',
+		'X-Amz-Signature': '4e99b9e991df4aa4370e88aa3390000d1a543527fcc1cdb6583b193aed00bf00'
+	}
+}
+```
+
+When you get this response you can use it to make the request with the file.
+
+### Getters
+
+The following getters can be used to customize and validate your `SlsApiUpload`.
 
 
-### get bucket()
+#### get bucket()
 
 *Required*
 
@@ -66,11 +128,9 @@ get bucket() {
 }
 ```
 
-### get path()
+#### get path()
 
-*Optional*
-
-*Default=""*
+*Optional* | *Default=""*
 
 This is used to indicate the path where the file should be saved
 
@@ -80,25 +140,21 @@ get path() {
 }
 ```
 
-### get availableTypes()
+#### get availableTypes()
 
-*Optional*
-
-*Default=[]*
+*Optional* | *Default=[]*
 
 This is used to indicate the accepted file types to be uploaded. If you not define them, all types will be valid. Example:
 
 ```js
 get availableTypes() {
-	return ['application/pdf']
+	return ['image/jpg', 'image/jpeg', 'image/png']
 }
 ```
 
-### get expiration()
+#### get expiration()
 
-*Optional*
-
-*Default=60*
+*Optional* | *Default=60*
 
 This is used to indicate the expiration time in seconds of the generated URL
 
@@ -108,11 +164,9 @@ get expiration() {
 }
 ```
 
-### get sizeRange()
+#### get sizeRange()
 
-*Optional*
-
-*Default=[1,10485760] // 1B to 10MB*
+*Optional* | *Default=[1,10485760] // 1B to 10MB*
 
 This is used to indicate the valid file size range to be uploaded
 
@@ -122,15 +176,32 @@ get sizeRange() {
 }
 ```
 
-## Usage SlsApiFileRelation Module
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
+
+</details>
+
+## SlsApiFileRelation
+
+<details>
+	<summary>This Module allows you to create an API to create a Document with the file data in the Database Collection.</summary>
+
+> **IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
+
+### API Example
 
 ```js
+// in src/api/item/file-upload/post.js
 'use strict';
 
 const { SlsApiFileRelation } = require('@janiscommerce/sls-api-upload');
 const FileModel = require('../models/your-file-model');
 
 class MyApiRelation extends SlsApiFileRelation {
+
 	get bucket() {
 		return 'bucket-name';
 	}
@@ -145,23 +216,38 @@ class MyApiRelation extends SlsApiFileRelation {
 }
 ```
 
+### Request Data
+
 This API has the following required request data:
 
 - **filename**: (string) The name and extension of the file.
 - **filesSource**: (string) The full key of the file stored in S3.
 
-Request data example;
+#### Request data example
 
 ```json
 {
-	"fileName": "image.png",
+	"fileName": "front-image.png",
 	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png"
 }
 ```
 
+### Response
+
+This API response with status-code `201` and `id` if success to Save the file data Document.
+
+```json
+// status-code 201
+{
+	"id": "5e866d89fc33220011108188"
+}
+```
+
+### Getters
+
 The following getters can be used to customize and validate your API:
 
-### get bucket()
+#### get bucket()
 
 *Required*
 
@@ -173,7 +259,7 @@ get bucket() {
 }
 ```
 
-### get model()
+#### get model()
 
 *Required*
 
@@ -187,7 +273,7 @@ get model() {
 }
 ```
 
-### get entityIdField()
+#### get entityIdField()
 
 *Required*
 
@@ -201,7 +287,7 @@ This is used to indicate the field name where the related entity ID should be sa
 	...
 ```
 
-### get customFieldsStruct()
+#### get customFieldsStruct()
 
 *Optional*
 
@@ -226,15 +312,86 @@ Request data example;
 }
 ```
 
-## Usage SlsApiFileDelete Module
+### Hooks
+
+This module has 2 Hooks:
+
+* [postValidateHook](#Common-Validation)
+* postSaveHook
+
+#### postSaveHook(id, dataFormatted)
+
+This hooks is async and execute after save the document. You can used it to emit an Event, invoke a Lambda function, create an extra Log, make a Request or whatever you need to the do after save.
 
 ```js
+ postSaveHook(id, itemFormatted) {
+	return Invoker.call('ItemNotify', { id, ...itemFormatted});
+}
+```
+
+### Format
+
+The object is created with the following fields:
+
+* `name`: the filename, example: `front-image.png`
+* `path`: the relative path in S3 Bucket, example `files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png`
+* `mimeType`: the file full type, example: `ìmage/png`
+* `type`: the simplified type, example `image`
+* `size`: the file size in Bytes, example: `1000`
+
+But if you have more fields, or you can add any others, you can use a custom Format method
+
+#### format(extraFileData)
+
+It's async and received the extra file data (if you added `customFieldsStruct`).
+
+```js
+format({ myRelationshipCustomField, myOptionalRelationshipCustomField }) {
+	return {
+		relations: {
+			default: myRelationshipCustomField,
+			optional: myOptionalRelationshipCustomField
+		},
+		lucky: Math.random() * 1000
+	};
+}
+```
+
+And final document saved in database would be:
+
+```js
+{
+	path: 'files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png',
+	name: 'front-image.png',
+	mimeType: 'image/png',
+	type: 'image',
+	size: 10000,
+	relations: {
+		default: 'stuff',
+		optional: 'accesory'
+	},
+	lucky: 667
+}
+```
+
+</details>
+
+## SlsApiFileDelete
+
+<details>
+	<summary>This Module allows you to create an API to delete a file from S3 Bucket and Database Collection.</summary>
+
+### API Example
+
+```js
+// in src/api/item/file/delete.js
 'use strict';
 
 const { SlsApiFileDelete } = require('@janiscommerce/sls-api-upload');
 const FileModel = require('../models/your-file-model');
 
 class MyApiDelete extends SlsApiFileDelete {
+
 	get bucket() {
 		return 'bucket-name';
 	}
@@ -249,9 +406,11 @@ class MyApiDelete extends SlsApiFileDelete {
 }
 ```
 
+### Getters
+
 The following getters can be used to customize and validate your SlsApiFileDelete.
 
-### get bucket()
+#### get bucket()
 
 *Required*
 
@@ -262,7 +421,7 @@ get bucket() {
 	return 'bucket-name';
 }
 ```
-### get model()
+#### get model()
 
 *Required*
 
@@ -276,7 +435,7 @@ get model() {
 }
 ```
 
-### get entityIdField()
+#### get entityIdField()
 
 *Required*
 
@@ -288,7 +447,44 @@ get entityIdField() {
 }
 ```
 
-## Usage SlsApiFileList Module
+### Hooks
+
+This module has two Hooks:
+
+* [postValidateHook](#Common-Validation)
+* postDeleteHook
+
+#### postDeleteHook(itemDeleted)
+
+This hooks is async and execute after delete the document from S3 Bucket. You can used it to emit an Event, invoke a Lambda function, create an extra Log, make a Request or whatever you need to the do after delete it.
+
+```js
+ postDeleteHook(itemDeleted) {
+
+	return EventEmitter.emit({
+		entity: 'item',
+		event: 'deleted',
+		client: this.session.clientCode,
+		id: itemDeleted.id
+	});
+}
+```
+
+</details>
+
+## SlsApiFileList
+
+<details>
+	<summary>This Module allows you to create an API to List file-data documents.</summary>
+
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
+
+</details>
+
 
 ```js
 'use strict';
@@ -327,7 +523,7 @@ get availableFilters() {
 }
 ```
 
-### get bucket()
+#### get bucket()
 
 *Required for Image type items*
 
@@ -341,7 +537,20 @@ get bucket() {
 
 This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
 
-## Usage SlsApiFileGet Module
+## SlsApiFileGet
+
+<details>
+	<summary>This Module allows you to create an API to get a valid pre-signed URL in order to upload a file to a S3 Bucket.</summary>
+
+
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
+
+</details>
+
 
 ```js
 'use strict';
@@ -367,7 +576,11 @@ get bucket() {
 
 This API extends from [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
 
-## Usage BaseFileModel Module
+## BaseFileModel
+
+<details>
+	<summary>This Module allows you to create an API to get a valid pre-signed URL in order to upload a file to a S3 Bucket.</summary>
+</details>
 
 ```js
 'use strict';
