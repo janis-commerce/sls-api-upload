@@ -51,41 +51,54 @@ const apiExtendedWithGetters = (
 	return API;
 };
 
+const defaultApiExtended = apiExtendedSimple('bucket-name');
+
+const apiCustom = ({
+	postValidateHook = () => true
+} = {}) => class CustomApi extends defaultApiExtended {
+
+	postValidateHook() {
+		return postValidateHook();
+	}
+};
+
 describe('SlsApiUpload', () => {
 
-	context('Request body', () => {
+	context('When Request body fails', () => {
 
 		const response = { code: 400 };
 
-		APITest(apiExtendedSimple('test'), [{
-			description: 'Should return 400 if request body is missing',
-			response
-		}, {
-			description: 'Should return 400 if request body data is empty',
-			response,
-			data: {}
-		}, {
-			description: 'Should return 400 if fileName in request body is missing',
-			request: {
-				data: { name: 'test.txt' }
-			},
-			response
-		}, {
-			description: 'Should return 400 if add extra data in request body received',
-			request: {
-				data: { fileName: 'test.txt', test: 1 }
-			},
-			response
-		}, {
-			description: 'Should return 400 if fileName has invalid type',
-			request: {
-				data: { fileName: 1 }
-			},
-			response
-		}]);
+		APITest(apiExtendedSimple('test'), [
+			{
+				description: 'Should return 400 if request body is missing',
+				response
+			}, {
+				description: 'Should return 400 if request body data is empty',
+				response,
+				data: {}
+			}, {
+				description: 'Should return 400 if fileName in request body is missing',
+				request: {
+					data: { name: 'test.txt' }
+				},
+				response
+			}, {
+				description: 'Should return 400 if add extra data in request body received',
+				request: {
+					data: { fileName: 'test.txt', test: 1 }
+				},
+				response
+			}, {
+				description: 'Should return 400 if fileName has invalid type',
+				request: {
+					data: { fileName: 1 }
+				},
+				response
+			}
+		]);
 	});
 
-	context('Required properties', () => {
+	context('When Required properties are invalids', () => {
 
 		APITest(apiExtendedSimple(), [{
 			description: 'Should return 400 bucket is not defined',
@@ -105,7 +118,7 @@ describe('SlsApiUpload', () => {
 			response: { code: 400, body: { message: SlsApiUploadError.messages.PATH_NOT_STRING } }
 		}]);
 
-		APITest(apiExtendedSimple('bucket-name'), [{
+		APITest(defaultApiExtended, [{
 			description: 'Should return 400 if fileName has an invalid extension',
 			request: {
 				data: { fileName: 'test.extension' }
@@ -150,7 +163,7 @@ describe('SlsApiUpload', () => {
 		}]);
 	});
 
-	context('Correct usage', () => {
+	context('When Body and Properties are correct', () => {
 
 		const uuidRgx = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}.json$';
 
@@ -162,108 +175,40 @@ describe('SlsApiUpload', () => {
 			globalSandbox.restore();
 		});
 
-		APITest(apiExtendedSimple('bucket-name'), [{
-			description: 'Should return 200 if file txt',
-			request: { data: { fileName: 'test.text' } },
-			response: { code: 200 }
-		}]);
-
-		APITest(apiExtendedWithGetters('bucket-name', 'files', ['application/json']), [{
-			description: 'Should return 200 if pass a filename json with availableTypes',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 }
-		}]);
-
-		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120), [{
-			description: 'Should return 200 if pass a filename json with expiration',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Expires: 120
-				});
+		APITest(apiCustom({ postValidateHook: () => { throw new Error(); } }), [
+			{
+				description: 'Should return 400 if custom validation fails',
+				request: { data: { fileName: 'test.text' } },
+				response: { code: 400 }
 			}
-		}]);
+		]);
 
-		APITest(apiExtendedWithGetters('bucket-name', 'files'), [{
-			description: 'Should return 200 if pass a filename json with default sizeRange',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Expires: 60,
-					Conditions: [['content-length-range', 1, 10 * 1024 * 1024]]
-				});
+		APITest(apiCustom(), [
+			{
+				description: 'Should return 200 if custom validation not fails',
+				request: { data: { fileName: 'test.text' } },
+				response: { code: 200 }
 			}
-		}]);
+		]);
 
-		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, [1, 20000000]), [{
-			description: 'Should return 200 if pass a filename json with sizeRange',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Expires: 120,
-					Conditions: [['content-length-range', 1, 20000000]]
-				});
-			}
-		}]);
-
-
-		APITest(apiExtendedWithGetters('bucket-name', 'files/'), [{
-			description: 'Should return 200 if pass filename with path correct',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
-					}
-				});
-			}
-		}]);
-
-
-		APITest(apiExtendedWithGetters('bucket-name', '/files/images'), [{
-			description: 'Should return 200 if pass filename with path to resolve',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: sandbox.match(new RegExp(`^files/images/${uuidRgx}`))
-					}
-				});
-			}
-		}]);
-
-		APITest(apiExtendedWithGetters('bucket-name', 'files'), [{
-			description: 'Should return 200 if pass filename with path to resolve',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
-					}
-				});
-			}
-		}]);
-
-		APITest(apiExtendedSimple('bucket-name'), [{
-			description: 'Should return 200 if pass filename with path empty',
-			request: { data: { fileName: 'test.json' } },
-			response: { code: 200 },
-			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: sandbox.match(new RegExp(`^${uuidRgx}`))
-					}
-				});
-			}
-		}]);
-
-		APITest(apiExtendedSimple('bucket-name'), [
+		APITest(defaultApiExtended, [
+			{
+				description: 'Should return 200 if file txt',
+				request: { data: { fileName: 'test.text' } },
+				response: { code: 200 }
+			},
+			{
+				description: 'Should return 200 if pass filename with path empty',
+				request: { data: { fileName: 'test.json' } },
+				response: { code: 200 },
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+						Fields: {
+							key: sandbox.match(new RegExp(`^${uuidRgx}`))
+						}
+					});
+				}
+			},
 			{
 				description: 'Should pass correct content-type to request with image png file',
 				request: { data: { fileName: 'test.png' } },
@@ -289,9 +234,90 @@ describe('SlsApiUpload', () => {
 				}
 			}
 		]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files', ['application/json']), [{
+			description: 'Should return 200 if pass a filename json with availableTypes',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 }
+		}]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120), [{
+			description: 'Should return 200 if pass a filename json with expiration',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 },
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Expires: 120
+				});
+			}
+		}]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files'), [
+			{
+				description: 'Should return 200 if pass a filename json with default sizeRange',
+				request: { data: { fileName: 'test.json' } },
+				response: { code: 200 },
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+						Expires: 60,
+						Conditions: [['content-length-range', 1, 10 * 1024 * 1024]]
+					});
+				}
+			},
+			{
+				description: 'Should return 200 if pass filename with path to resolve',
+				request: { data: { fileName: 'test.json' } },
+				response: { code: 200 },
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+						Fields: {
+							key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+						}
+					});
+				}
+			}
+		]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files', [], 120, [1, 20000000]), [{
+			description: 'Should return 200 if pass a filename json with sizeRange',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 },
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Expires: 120,
+					Conditions: [['content-length-range', 1, 20000000]]
+				});
+			}
+		}]);
+
+		APITest(apiExtendedWithGetters('bucket-name', 'files/'), [{
+			description: 'Should return 200 if pass filename with path correct',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 },
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+					}
+				});
+			}
+		}]);
+
+		APITest(apiExtendedWithGetters('bucket-name', '/files/images'), [{
+			description: 'Should return 200 if pass filename with path to resolve',
+			request: { data: { fileName: 'test.json' } },
+			response: { code: 200 },
+			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
+					Fields: {
+						key: sandbox.match(new RegExp(`^files/images/${uuidRgx}`))
+					}
+				});
+			}
+		}]);
 	});
 
-	context('S3 error', () => {
+	context('When S3 fails', () => {
 
 		beforeEach(() => {
 			globalSandbox.stub(S3, 'createPresignedPost').rejects(new Error('S3 internal error'));
@@ -301,7 +327,7 @@ describe('SlsApiUpload', () => {
 			globalSandbox.restore();
 		});
 
-		APITest(apiExtendedSimple('bucket-name'), [{
+		APITest(defaultApiExtended, [{
 			description: 'Should return 500 if S3 rejects',
 			request: { data: { fileName: 'test.text' } },
 			response: { code: 500 }
