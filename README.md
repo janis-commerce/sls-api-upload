@@ -283,7 +283,7 @@ This module has only one Hook:
 
 > This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
 
-**IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
+:warning: **IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
 
 ### API Example
 
@@ -598,6 +598,7 @@ This module has only one Hook:
 ### API Example
 
 ```js
+// in src/api/item/file/get.js
 'use strict';
 
 const { SlsApiFileGet } = require('@janiscommerce/sls-api-upload');
