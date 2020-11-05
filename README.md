@@ -129,6 +129,8 @@ static get fields() {
 <details>
 	<summary>This Module allows you to create an API to get a valid pre-signed URL and headers in order to upload a file to a S3 Bucket.</summary>
 
+> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
+
 ### API Example
 
 ```js
@@ -275,7 +277,9 @@ This module has only one Hook:
 <details>
 	<summary>This Module allows you to create an API to create a Document with the file data in the Database Collection.</summary>
 
-> **IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
+> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
+
+**IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
 
 ### API Example
 
@@ -467,7 +471,7 @@ And final document saved in database would be:
 <details>
 	<summary>This Module allows you to create an API to List file-data documents.</summary>
 
-> This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list), so has the some properties.
+> This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
 
 ### API Example
 
@@ -636,6 +640,8 @@ This module has only one Hook:
 
 <details>
 	<summary>This Module allows you to create an API to delete a file from S3 Bucket and Database Collection.</summary>
+
+> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
 
 ### API Example
 
