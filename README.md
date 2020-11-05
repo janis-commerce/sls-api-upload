@@ -135,7 +135,7 @@ static get fields() {
 
 If you want to see more about it:
 * [AWS preSigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
-* [Upload an Image using Postman and S3 preSigned URL](https://medium.com/@lakshmanLD/upload-file-to-s3-using-lambda-the-pre-signed-url-way-158f074cda6c)
+* [Upload an Image using Postman and S3 preSigned URL](https://medium.com/@lakshmanLD/upload-file-to-s3-using-lambda-the-pre-signed-url-way-158f074cda6c), see Step 2.
 
 ### API Example
 
