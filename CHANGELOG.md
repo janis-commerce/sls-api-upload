@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Every API Module, method `postValidateHook`
+- SLS-API-Relation, method `postSaveHook` and `format`
+- SLS-API-Delete, method `postDeleteHook`
+- SLS-API-List and SLS-API-Get, method `formatUrl` and `formatFileData`
+- SLS-API-List, method `customSortableFields` and `customAvailableFilters`
+
+### Changed
+- Every API Module, validates Bucket in `validate()` method. Now if fails finsh with `status-code: 400`
+- SLS-API-List changed `shouldAddUrl` not check `type: "image"` anymore, now only returns `false` as default (must overwrite to change to `true`)
 
 ## [2.0.0] - 2020-09-09
 ### Added
