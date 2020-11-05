@@ -81,7 +81,9 @@ The following getters can be used to customize and validate your BaseFileModel.
 
 #### static get table()
 
-*Optional* | *Default="files"*
+*Optional*
+
+*Default*: `"files"`
 
 This is used to indicate the name of the files table/collection
 
@@ -93,7 +95,20 @@ static get table() {
 
 #### static get fields()
 
-*Optional* | *Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true }*
+*Optional*
+
+*Default*:
+
+```js
+{
+	id: true,
+	path: true,
+	size: true,
+	name: true,
+	type: true,
+	dateCreated: true
+}
+```
 
 This is used to indicate the fields of the files table/collection
 
@@ -193,7 +208,9 @@ get bucket() {
 
 #### get path()
 
-*Optional* | *Default=""*
+*Optional*
+
+*Default*: `""`
 
 This is used to indicate the path where the file should be saved
 
@@ -205,7 +222,9 @@ get path() {
 
 #### get availableTypes()
 
-*Optional* | *Default=[]*
+*Optional*
+
+*Default*: `[]`
 
 This is used to indicate the accepted file types to be uploaded. If you not define them, all types will be valid. Example:
 
@@ -217,7 +236,9 @@ get availableTypes() {
 
 #### get expiration()
 
-*Optional* | *Default=60*
+*Optional*
+
+*Default*: `60`
 
 This is used to indicate the expiration time in seconds of the generated URL
 
@@ -229,7 +250,9 @@ get expiration() {
 
 #### get sizeRange()
 
-*Optional* | *Default=[1,10485760] // 1B to 10MB*
+*Optional*
+
+*Default*: `[1,10485760] // 1B to 10MB`
 
 This is used to indicate the valid file size range to be uploaded
 
