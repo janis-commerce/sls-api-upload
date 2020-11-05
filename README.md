@@ -625,8 +625,8 @@ get bucket() {
 ### Format
 
 The File-Document can be formatted in the same way as in the [SLS-API-List](#SlsApiFileList) using
-* [formatFileData](#formatFileData(fileData))
-* [formatUrl](formatUrl(path))
+* [formatFileData](#formatfiledatafiledata)
+* [formatUrl](formaturlpath)
 
 ### Hooks
 
