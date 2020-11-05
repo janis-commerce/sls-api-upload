@@ -10,7 +10,7 @@ This package contains several modules to handle upload files, list it, or delete
 npm install @janiscommerce/sls-api-upload
 ```
 
-## :bookmark: Content
+## Content
 
 In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
 
@@ -26,7 +26,7 @@ In this package, you can found several modules to create APIs to manage files, u
 
 Every Module can be customize.
 
-## :mag: Common Validation
+## Common Validation
 
 Some APIs Modules offers some custom validation for specfics features such as file size, or file type, but everyone has a common validation hook.
 
@@ -46,7 +46,7 @@ class MyApiUpload extends SlsApiUpload {
 };
 ```
 
-## :footprints: BaseFileModel
+## BaseFileModel
 
 <details>
 	<summary>This Module allows you to create a Model for file-data document.</summary>
@@ -124,7 +124,7 @@ static get fields() {
 </details>
 
 
-## :outbox_tray: SlsApiUpload
+## SlsApiUpload
 
 <details>
 	<summary>This Module allows you to create an API to get a valid pre-signed URL and headers in order to upload a file to a S3 Bucket.</summary>
@@ -272,7 +272,7 @@ This module has only one Hook:
 
 </details>
 
-## :inbox_tray: SlsApiFileRelation
+## SlsApiFileRelation
 
 <details>
 	<summary>This Module allows you to create an API to create a Document with the file data in the Database Collection.</summary>
@@ -466,7 +466,7 @@ And final document saved in database would be:
 
 </details>
 
-## :open_book: SlsApiFileList
+## SlsApiFileList
 
 <details>
 	<summary>This Module allows you to create an API to List file-data documents.</summary>
@@ -584,7 +584,7 @@ This module has only one Hook:
 
 </details>
 
-## :page_with_curl: SlsApiFileGet
+## SlsApiFileGet
 
 <details>
 	<summary>This Module allows you to create an API to get a single file-data document.</summary>
@@ -636,7 +636,7 @@ This module has only one Hook:
 
 </details>
 
-## :scissors: SlsApiFileDelete
+## SlsApiFileDelete
 
 <details>
 	<summary>This Module allows you to create an API to delete a file from S3 Bucket and Database Collection.</summary>
