@@ -131,6 +131,12 @@ static get fields() {
 
 > This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
 
+:warning: **IMPORTANT**: When you get the response you can use it to make the request with the file.
+
+If you want to see more about it:
+* [AWS preSigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
+* [Upload an Image using Postman and S3 preSigned URL](https://medium.com/@lakshmanLD/upload-file-to-s3-using-lambda-the-pre-signed-url-way-158f074cda6c)
+
 ### API Example
 
 ```js
@@ -188,8 +194,6 @@ module.exports = class MyApiUpload extends SlsApiUpload {
 	}
 }
 ```
-
-When you get this response you can use it to make the request with the file.
 
 ### Getters
 
