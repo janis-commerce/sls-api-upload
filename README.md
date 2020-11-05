@@ -3,7 +3,7 @@
 ![Build Status](https://github.com/janis-commerce/sls-api-upload/workflows/Build%20Status/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/sls-api-upload/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/sls-api-upload?branch=master)
 
-This package contains several modules to handle **Janis** file upload APIs.
+This package contains several modules to handle upload files, list it, or delete it for **Janis** APIs.
 
 ## Installation
 ```sh
@@ -45,6 +45,69 @@ class MyApiUpload extends SlsApiUpload {
 	}
 };
 ```
+
+## BaseFileModel
+
+<details>
+	<summary>This Module allows you to create a Model for file-data document.</summary>
+
+> This Class extends from [@janiscommerce/model](https://www.npmjs.com/package/@janiscommerce/model)
+
+### Model Example
+
+```js
+'use strict';
+
+const { BaseFileModel } = require('@janiscommerce/sls-api-upload');
+
+class FileModel extends BaseFileModel {
+
+	static get table() {
+		return 'your_table_files';
+	}
+
+	static get fields() {
+		return {
+			...super.fields,
+			productId: true
+		};
+	}
+}
+```
+
+### Getters
+
+The following getters can be used to customize and validate your BaseFileModel.
+
+#### static get table()
+
+*Optional* | *Default="files"*
+
+This is used to indicate the name of the files table/collection
+
+```js
+static get table() {
+	return 'your_table_files';
+}
+```
+
+#### static get fields()
+
+*Optional* | *Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true }*
+
+This is used to indicate the fields of the files table/collection
+
+```js
+static get fields() {
+	return {
+		...super.fields,
+		productId: true
+	};
+}
+```
+
+</details>
+
 
 ## SlsApiUpload
 
@@ -376,6 +439,176 @@ And final document saved in database would be:
 
 </details>
 
+## SlsApiFileList
+
+<details>
+	<summary>This Module allows you to create an API to List file-data documents.</summary>
+
+> This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list), so has the some properties.
+
+### API Example
+
+```js
+// in src/api/item/file/list.js
+'use strict';
+
+const { SlsApiFileDelete } = require('@janiscommerce/sls-api-upload');
+
+class MyApiList extends SlsApiFileList {}
+
+```
+
+In this example, the List API only can
+* **sort** and **filter** by
+	* `id` : file-data document internal ID
+	* `name` : filename
+	* `dateCreated` : *strict mode* only search by exact Date
+
+Also, every file-data document will NOT have a URL to use it for show it, download it, etc..
+
+### Custom Sorting and Filtering
+
+If you need more fields to sort or filter exist 2 *optionals* getters.
+
+#### get customSortableFields()
+
+To add more fields to be sortable. Must return an *Array* of *Strings*
+
+```js
+get customSortableFields() {
+	return ['type', 'order'];
+}
+```
+
+#### get customAvailableFilters()
+
+To add more fields to be sortable. Must return an *Array* of *Strings* or *Object*, see more in [@janiscommerce/api-list filters](https://www.npmjs.com/package/@janiscommerce/api-list#get-availablefilters).
+
+```js
+get customAvailableFilters() {
+	return [
+		'type',
+		{
+			name: 'order',
+			valueMapper: Number
+		}
+	];
+}
+```
+
+### Adding the URL
+
+If you want the file-data documents have an URL, for example because are images an you wanted to show them, you can added by changing this getter and adding an S3 bucket.
+
+#### get shouldAddUrl()
+
+Only must return a truthy value, by *default* is `false`. If the bucket is not setted will fails with status-code `400`.
+
+```js
+get shouldAddUrl() {
+	return true;
+}
+```
+
+#### get bucket()
+
+This is used to indicate the bucket where the file must be found.
+
+```js
+get bucket() {
+	return 'bucket-name';
+}
+```
+
+### Format
+
+You can format each file-data document and/or the file's URL.
+
+#### formatFileData(fileData)
+
+To format the file data except file-path
+
+```js
+formatFileData({ order, ...fileData }) {
+	return {
+		...fileData,
+		order: `#${order}`
+	};
+}
+```
+
+#### formatUrl(path)
+
+By *default* it returns an URL signed to have access to S3 Bucket, which is add to `url` field.
+
+But if you wanted to changed this behaviour you can overwrigth it.
+
+```js
+formatUrl(path) {
+	return `${this.bucket}/public/${path}`;
+}
+```
+
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
+
+</details>
+
+## SlsApiFileGet
+
+<details>
+	<summary>This Module allows you to create an API to get a single file-data document.</summary>
+
+> This API extends from [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
+
+### API Example
+
+```js
+'use strict';
+
+const { SlsApiFileGet } = require('@janiscommerce/sls-api-upload');
+
+class MyApiGet extends SlsApiFileGet {
+
+	get bucket() {
+		return 'bucket-name';
+	}
+}
+```
+
+### URL field
+
+This API module always return the file-data document with the `url` field, so you must defined a S3 Bucket, otherwise it fails with status-code `400`.
+
+### get bucket()
+
+*Required*
+
+This is used to indicate the bucket where the file can be found.
+
+```js
+get bucket() {
+	return 'bucket-name';
+}
+```
+
+### Format
+
+The File-Document can be formatted in the same way as in the [SLS-API-List](#SlsApiFileList) using
+* [formatFileData](#formatFileData(fileData))
+* [formatUrl](formatUrl(path))
+
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
+
+</details>
+
 ## SlsApiFileDelete
 
 <details>
@@ -471,168 +704,3 @@ This hooks is async and execute after delete the document from S3 Bucket. You ca
 ```
 
 </details>
-
-## SlsApiFileList
-
-<details>
-	<summary>This Module allows you to create an API to List file-data documents.</summary>
-
-### Hooks
-
-This module has only one Hook:
-
-* [postValidateHook](#Common-Validation)
-
-</details>
-
-
-```js
-'use strict';
-
-const { SlsApiFileDelete } = require('@janiscommerce/sls-api-upload');
-
-class MyApiList extends SlsApiFileList {}
-
-```
-
-Usually, this API has a parent entity and when the API finds records in the model, it filters by parent entity name indicated in the API path.
-To change this name, you can set it in the availableFilters getter.
-
-Here is an example for an API `/product/10/file`, with a field `productId` in the DB:
-
-```js
-get availableFilters() {
-	return [
-		...super.availableFilters,
-		{
-			name: 'product',
-			internalName: 'productId'
-		}
-	];
-}
-```
-
-If you dont have this problem, just add the entity name in availableFilters getter:
-
-```js
-get availableFilters() {
-	return [
-		...super.availableFilters,
-		'product'
-	];
-}
-```
-
-#### get bucket()
-
-*Required for Image type items*
-
-This is used to indicate the bucket where the file is.
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
-
-This API extends from [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list)
-
-## SlsApiFileGet
-
-<details>
-	<summary>This Module allows you to create an API to get a valid pre-signed URL in order to upload a file to a S3 Bucket.</summary>
-
-
-### Hooks
-
-This module has only one Hook:
-
-* [postValidateHook](#Common-Validation)
-
-</details>
-
-
-```js
-'use strict';
-
-const { SlsApiFileGet } = require('@janiscommerce/sls-api-upload');
-
-class MyApiGet extends SlsApiFileGet {}
-```
-
-The following getters can be used to customize and validate your SlsApiFileGet.
-
-### get bucket()
-
-*Required*
-
-This is used to indicate the bucket where the file is.
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
-
-This API extends from [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get)
-
-## BaseFileModel
-
-<details>
-	<summary>This Module allows you to create an API to get a valid pre-signed URL in order to upload a file to a S3 Bucket.</summary>
-</details>
-
-```js
-'use strict';
-
-const { BaseFileModel } = require('@janiscommerce/sls-api-upload');
-
-class FileModel extends BaseFileModel {
-	static get table() {
-		return 'your_table_files';
-	}
-
-	static get fields() {
-		return {
-			...super.fields,
-			productId: true
-		};
-	}
-}
-
-```
-
-The following getters can be used to customize and validate your BaseFileModel.
-
-### static get table()
-
-*Optional*
-
-*Default="files"*
-
-This is used to indicate the name of the files table/collection
-
-```js
-static get table() {
-	return 'your_table_files';
-}
-```
-
-### static get fields()
-
-*Optional*
-
-*Default={ id: true, path: true, size: true, name: true, type: true, dateCreated: true }*
-
-This is used to indicate the fields of the files table/collection
-
-```js
-static get fields() {
-	return {
-		...super.fields,
-		productId: true
-	};
-}
-```
-
-This Class extends from [@janiscommerce/model](https://www.npmjs.com/package/@janiscommerce/model)
