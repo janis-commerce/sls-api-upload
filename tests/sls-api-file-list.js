@@ -127,6 +127,42 @@ describe('File List Api', () => {
 	context('When Should not add url', () => {
 
 		APITest(apiCustom({
+			customSortableFields: 'order'
+		}), [
+			{
+				description: 'Should return 400 if custom Sortable Fiels is invalid',
+				session: true,
+				response: {
+					code: 400
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get');
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.notCalled(BaseModel.prototype.get);
+				}
+			}
+		]);
+
+		APITest(apiCustom({
+			customAvailableFilters: 'order'
+		}), [
+			{
+				description: 'Should return 400 if custom Available Filters is invalid',
+				session: true,
+				response: {
+					code: 400
+				},
+				before: sandbox => {
+					sandbox.stub(BaseModel.prototype, 'get');
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.notCalled(BaseModel.prototype.get);
+				}
+			}
+		]);
+
+		APITest(apiCustom({
 			postValidateHook: () => { throw new Error(); }
 		}), [
 			{

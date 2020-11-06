@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - SLS-API-List, method `customSortableFields` and `customAvailableFilters`
 
 ### Changed
-- Every API Module, validates Bucket in `validate()` method. Now if fails finsh with `status-code: 400`
+- Every API Module, validates Bucket in `validate()` method. Now If validation fails it sets status code `400`
 - SLS-API-List changed `shouldAddUrl` not check `type: "image"` anymore, now only returns `false` as default (must overwrite to change to `true`)
 
 ## [2.0.0] - 2020-09-09
