@@ -2,11 +2,14 @@
 
 const APITest = require('@janiscommerce/api-test');
 const S3 = require('@janiscommerce/s3');
-const globalSandbox = require('sinon').createSandbox();
+
+const globalSandbox = require('sinon');
+
 const { SlsApiUpload, SlsApiUploadError } = require('../lib/index');
 
 const mockS3 = () => {
-	globalSandbox.stub(S3, 'createPresignedPost').resolves({ url: 'URL', fields: {} });
+	globalSandbox.stub(S3, 'createPresignedPost')
+		.resolves({ url: 'URL', fields: {} });
 };
 
 const apiExtendedSimple = bucket => {
@@ -204,7 +207,7 @@ describe('SlsApiUpload', () => {
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
 						Fields: {
-							key: sandbox.match(new RegExp(`^${uuidRgx}`))
+							key: globalSandbox.match(new RegExp(`^${uuidRgx}`))
 						}
 					});
 				}
@@ -271,7 +274,7 @@ describe('SlsApiUpload', () => {
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
 						Fields: {
-							key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+							key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
 						}
 					});
 				}
@@ -297,7 +300,7 @@ describe('SlsApiUpload', () => {
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
 					Fields: {
-						key: sandbox.match(new RegExp(`^files/${uuidRgx}`))
+						key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
 					}
 				});
 			}
@@ -310,7 +313,7 @@ describe('SlsApiUpload', () => {
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
 					Fields: {
-						key: sandbox.match(new RegExp(`^files/images/${uuidRgx}`))
+						key: globalSandbox.match(new RegExp(`^files/images/${uuidRgx}`))
 					}
 				});
 			}

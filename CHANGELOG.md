@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.1] - 2021-10-26
+### Changed
+- Updated dependencies
+
+### Removed
+- Useless `fields` getter for models
+
 ## [2.1.0] - 2020-11-10
 ### Added
 - Every API Module, method `postValidateHook`
