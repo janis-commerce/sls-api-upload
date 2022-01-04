@@ -384,6 +384,37 @@ describe('File List Api', () => {
 
 					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
 				}
+			},
+			{
+				description: 'Should return 200 and not make S3 request when path is not setted',
+				request: {},
+				session: true,
+				response: {
+					body: [{ ...rowFormatted, url: undefined }],
+					headers: {
+						'x-janis-total': 1
+					},
+					code: 200
+				},
+				before: sandbox => {
+
+					const { path, ...fileWithOutPath } = rowGetted;
+
+					sandbox.stub(BaseModel.prototype, 'get').resolves([fileWithOutPath]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+
+					sandbox.spy(S3, 'getSignedUrl');
+
+				},
+				after: (response, sandbox) => {
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
+					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
+						limit: 60,
+						page: 1
+					});
+
+					sandbox.assert.notCalled(S3.getSignedUrl);
+				}
 			}
 		]);
 	});

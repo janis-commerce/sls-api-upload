@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.2] - 2022-01-04
+### Changed
+- ApiList and ApiGet - Not making any S3 Request when `path` is missing
+
 ## [2.1.1] - 2021-10-26
 ### Changed
 - Updated dependencies
