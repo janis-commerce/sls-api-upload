@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.3] - 2022-07-07
+### Changed
+- Updated `@janiscommerce/model` up to `6.x.x` dependency and other dependencies were updated
+
 ## [2.1.2] - 2022-01-04
 ### Changed
 - ApiList and ApiGet - Not making any S3 Request when `path` is missing
