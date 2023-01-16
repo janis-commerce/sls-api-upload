@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.0] - 2023-01-16
+### Changed
+- Now the api `List`, `Get` and `Delete` it will be user de `Storage` Microservice lambda's
+
+### Removed
+- Remove the sls api upload
+
 ## [2.1.3] - 2022-07-07
 ### Changed
 - Updated `@janiscommerce/model` up to `6.x.x` dependency and other dependencies were updated

@@ -1,8 +1,8 @@
 'use strict';
 
-const mime = require('mime');
 const APITest = require('@janiscommerce/api-test');
-const S3 = require('@janiscommerce/s3');
+const { Invoker } = require('@janiscommerce/lambda');
+
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 
@@ -10,20 +10,11 @@ describe('SlsApiRelation', () => {
 
 	const apiExtendedSimple = ({
 		entityIdField,
-		bucket,
-		customFieldsStruct,
-		model = BaseModel
+		customFieldsStruct
 	} = {}) => class API extends SlsApiFileRelation {
+
 		get entityIdField() {
 			return entityIdField;
-		}
-
-		get bucket() {
-			return bucket;
-		}
-
-		get model() {
-			return model;
 		}
 
 		get customFieldsStruct() {
@@ -32,8 +23,7 @@ describe('SlsApiRelation', () => {
 	};
 
 	const defaultApiExtended = apiExtendedSimple({
-		entityIdField: 'test',
-		bucket: 'test'
+		entityIdField: 'test'
 	});
 
 	const apiCustom = ({
@@ -55,25 +45,26 @@ describe('SlsApiRelation', () => {
 		}
 	};
 
-	const defaultRequestData = { fileName: 'test.js', fileSource: 'files/test.js' };
+	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';
+	const defaultRequestData = { fileName: 'test.png', fileSource: path };
+
+	const fileInfo = {
+		'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png': {
+			AcceptRanges: 'bytes',
+			LastModified: '2023-01-11T18:51:04.000Z',
+			ContentLength: 10000,
+			ETag: 'ffd87faf53d1d1627f635101c295ce78',
+			ContentType: 'image/png',
+			Metadata: {}
+		}
+	};
 
 	context('Validate', () => {
-
-		APITest(apiExtendedSimple({ model: null }), [{
-			description: 'Should return 400 if model is not defined',
-			request: { data: defaultRequestData },
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'Should return 400 if model is not a Class',
-			request: { data: defaultRequestData },
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_IS_NOT_MODEL_CLASS } }
-		}]);
 
 		APITest(apiExtendedSimple(), [{
 			description: 'Should return 400 if entityIdField is not defined',
 			request: { data: defaultRequestData },
+			session: true,
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
 		}]);
 
@@ -83,24 +74,8 @@ describe('SlsApiRelation', () => {
 			response: { code: 400, body: { message: SlsApiFileRelationError.messages.ENTITY_ID_FIELD_NOT_STRING } }
 		}]);
 
-		APITest(apiExtendedSimple({ entityIdField: 'test' }), [{
-			description: 'Should return 400 if bucket is not defined',
-			request: { data: defaultRequestData },
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_DEFINED } }
-		}]);
-
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 123
-		}), [{
-			description: 'Should return 400 if bucket is not a string',
-			request: { data: defaultRequestData },
-			response: { code: 400, body: { message: SlsApiFileRelationError.messages.BUCKET_NOT_STRING } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 'test',
 			customFieldsStruct: { type: 'string' }
 		}), [{
 			description: 'Should return 400 if pass incorrect custom fields in body',
@@ -146,7 +121,7 @@ describe('SlsApiRelation', () => {
 		}), [{
 			description: 'Should return 400 if not pass custom validation',
 			request: {
-				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				data: defaultRequestData,
 				pathParameters: [1]
 			},
 			response: { code: 400 }
@@ -160,58 +135,84 @@ describe('SlsApiRelation', () => {
 				description: 'Should return 500 if fail headObject',
 				session: true,
 				request: {
-					data: { fileName: 'test.png', fileSource: 'files/test.png' },
+					data: defaultRequestData,
 					pathParameters: [1]
 				},
 				response: { code: 500 },
 				before: sandbox => {
-					sandbox.stub(S3, 'headObject').rejects();
+					sandbox.stub(Invoker, 'serviceSafeClientCall').rejects({ statusCode: 404 });
 					sandbox.stub(BaseModel.prototype, 'insert');
 				},
 				after: (afterResponse, sandbox) => {
-					sandbox.assert.calledOnce(S3.headObject);
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 					sandbox.assert.notCalled(BaseModel.prototype.insert);
+				}
+			},
+			{
+				description: 'Should return 200 and save without content data',
+				session: true,
+				request: {
+					data: defaultRequestData,
+					pathParameters: [1]
+				},
+				response: { code: 201 },
+				before: sandbox => {
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
+					sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
+					sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
+						test: 1,
+						path,
+						name: 'test.png',
+						mimeType: null,
+						type: 'other',
+						size: null
+					});
 				}
 			},
 			{
 				description: 'Should return 500 if fail model insert',
 				session: true,
 				request: {
-					data: { fileName: 'test.png', fileSource: 'files/test.png' },
+					data: defaultRequestData,
 					pathParameters: [1]
 				},
 				response: { code: 500 },
 				before: sandbox => {
-					sandbox.stub(S3, 'headObject').resolves({
-						ContentType: 'image/png',
-						ContentLength: 10000
-					});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 					sandbox.stub(BaseModel.prototype, 'insert').rejects();
 				},
 				after: (afterResponse, sandbox) => {
-					sandbox.assert.calledOnce(BaseModel.prototype.insert);
-					sandbox.assert.calledOnce(S3.headObject);
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
+					sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
+						test: 1,
+						path,
+						name: 'test.png',
+						mimeType: 'image/png',
+						type: 'image',
+						size: 10000
+					});
 				}
 			},
 			{
 				description: 'Should return 200 with valid data',
 				session: true,
 				request: {
-					data: { fileName: 'test.png', fileSource: 'files/test.png' },
+					data: defaultRequestData,
 					pathParameters: [1]
 				},
 				response: { code: 201, body: { id: 12345 } },
 				before: sandbox => {
-					sandbox.stub(S3, 'headObject').resolves({
-						ContentType: 'image/png',
-						ContentLength: 10000
-					});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 					sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 				},
 				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 					sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 						test: 1,
-						path: 'files/test.png',
+						path,
 						name: 'test.png',
 						mimeType: 'image/png',
 						type: 'image',
@@ -223,7 +224,6 @@ describe('SlsApiRelation', () => {
 
 		APITest(apiExtendedSimple({
 			entityIdField: 'test',
-			bucket: 'test',
 			customFieldsStruct: {
 				description: 'string',
 				order: 'number'
@@ -233,8 +233,7 @@ describe('SlsApiRelation', () => {
 			session: true,
 			request: {
 				data: {
-					fileName: 'test.png',
-					fileSource: 'files/test.png',
+					...defaultRequestData,
 					description: 'test description',
 					order: 1
 				},
@@ -242,16 +241,14 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: 'image/png',
-					ContentLength: 10000
-				});
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
-					path: 'files/test.png',
+					path,
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
@@ -268,21 +265,19 @@ describe('SlsApiRelation', () => {
 			description: 'Should return 200 with custom validation and post-save-hook',
 			session: true,
 			request: {
-				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				data: defaultRequestData,
 				pathParameters: [1]
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: 'image/png',
-					ContentLength: 10000
-				});
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
-					path: 'files/test.png',
+					path,
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
@@ -297,21 +292,19 @@ describe('SlsApiRelation', () => {
 			description: 'Should return 500 if fails in post-save-hook',
 			session: true,
 			request: {
-				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				data: defaultRequestData,
 				pathParameters: [1]
 			},
 			response: { code: 500 },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: 'image/png',
-					ContentLength: 10000
-				});
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
-					path: 'files/test.png',
+					path,
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
@@ -326,18 +319,16 @@ describe('SlsApiRelation', () => {
 			description: 'Should return 500 and no save if fails in format',
 			session: true,
 			request: {
-				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				data: defaultRequestData,
 				pathParameters: [1]
 			},
 			response: { code: 500 },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: 'image/png',
-					ContentLength: 10000
-				});
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 				sandbox.assert.notCalled(BaseModel.prototype.insert);
 			}
 		}]);
@@ -348,21 +339,19 @@ describe('SlsApiRelation', () => {
 			description: 'Should return 200 and add a custom field',
 			session: true,
 			request: {
-				data: { fileName: 'test.png', fileSource: 'files/test.png' },
+				data: defaultRequestData,
 				pathParameters: [1]
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: 'image/png',
-					ContentLength: 10000
-				});
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
 				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
 					test: 1,
-					path: 'files/test.png',
+					path,
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
@@ -372,75 +361,57 @@ describe('SlsApiRelation', () => {
 			}
 		}]);
 
-		const types = [{
-			extension: '.jpg',
-			type: 'image'
-		}, {
-			extension: '.gif',
-			type: 'image'
-		}, {
-			extension: '.png',
-			type: 'image'
-		}, {
-			extension: '.jpeg',
-			type: 'image'
-		}, {
-			extension: '.doc',
-			type: 'doc'
-		}, {
-			extension: '.docx',
-			type: 'doc'
-		}, {
-			extension: '.mp4',
-			type: 'video'
-		}, {
-			extension: '.flv',
-			type: 'video'
-		}, {
-			extension: '.mp3',
-			type: 'audio'
-		}, {
-			extension: '.wav',
-			type: 'audio'
-		}, {
-			extension: '.ods',
-			type: 'sheet'
-		}, {
-			extension: '.csv',
-			type: 'sheet'
-		}, {
-			extension: '.xlsx',
-			type: 'sheet'
-		}, {
-			extension: '.xls',
-			type: 'sheet'
-		}, {
-			extension: '.json',
-			type: 'other'
-		}, {
-			extension: '.txt',
-			type: 'other'
-		}];
+		const types = [
+			{ extension: '.jpg', type: 'image', ContentType: 'image/jpeg' },
+			{ extension: '.gif', type: 'image', ContentType: 'image/gif' },
+			{ extension: '.png', type: 'image', ContentType: 'image/png' },
+			{ extension: '.jpeg', type: 'image', ContentType: 'image/jpeg' },
+			{ extension: '.doc', type: 'doc', ContentType: 'application/msword' },
+			{ extension: '.docx', type: 'doc', ContentType: 'application/vnd.openxmlformats- officedocument.wordprocessingml.document' },
+			{ extension: '.mp4', type: 'video', ContentType: 'video/mp4' },
+			{ extension: '.flv', type: 'video', ContentType: 'video/x-flv' },
+			{ extension: '.mp3', type: 'audio', ContentType: 'audio/mpeg3' },
+			{ extension: '.wav', type: 'audio', ContentType: 'audio/wav' },
+			{ extension: '.ods', type: 'sheet', ContentType: 'application/vnd.oasis.opendocument.spreadsheet' },
+			{ extension: '.csv', type: 'sheet', ContentType: 'text/csv' },
+			{ extension: '.xlsx', type: 'sheet', ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+			{ extension: '.xls', type: 'sheet', ContentType: 'application/vnd.ms-excel' },
+			{ extension: '.json', type: 'other', ContentType: 'application/json' },
+			{ extension: '.txt', type: 'other', ContentType: 'text/plain' }
+		];
 
-		APITest(defaultApiExtended, types.map(({ extension, type }) => ({
+		APITest(defaultApiExtended, types.map(({ extension, type, ContentType }) => ({
 			description: `Should return 200 passing diferents files types in data (${extension})`,
 			session: true,
 			request: {
-				data: { fileName: `test${extension}`, fileSource: `files/test${extension}` },
+				data: { fileName: `test${extension}`, fileSource: `cdn/files/defaultClient/test${extension}` },
 				pathParameters: [1]
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
-				sandbox.stub(S3, 'headObject').resolves({
-					ContentType: mime.getType(extension),
-					ContentLength: 10000
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({
+					statusCode: 200,
+					payload: {
+						[`cdn/files/defaultClient/test${extension}`]: {
+							...fileInfo[path],
+							ContentType
+						}
+					}
 				});
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
 			after: (afterResponse, sandbox) => {
-				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, sandbox.match({
-					type
-				}));
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', {
+					paths: [`cdn/files/defaultClient/test${extension}`]
+				});
+				sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
+					test: 1,
+					path: `cdn/files/defaultClient/test${extension}`,
+					name: `test${extension}`,
+					mimeType: ContentType,
+					type,
+					size: 10000
+				});
 			}
 		})));
 	});

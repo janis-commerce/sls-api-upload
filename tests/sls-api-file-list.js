@@ -1,30 +1,27 @@
 'use strict';
 
-const globalSandbox = require('sinon').createSandbox();
+const sinon = require('sinon');
 const APITest = require('@janiscommerce/api-test');
-const S3 = require('@janiscommerce/s3');
 const { ApiListData } = require('@janiscommerce/api-list');
-const { SlsApiFileList, SlsApiFileListError } = require('../lib/index');
+const { Invoker } = require('@janiscommerce/lambda');
+
+const { SlsApiFileList } = require('../lib/index');
 const BaseModel = require('../lib/base-model');
 
 describe('File List Api', () => {
 
 	afterEach(() => {
-		globalSandbox.restore();
+		sinon.restore();
 	});
 
 	beforeEach(() => {
-		globalSandbox.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
+		sinon.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
 	});
 
+	const path = 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png';
 	const url =
-		'https://bucket.s3.amazonaws.com/file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg?AWSAccessKeyId=0&Expires=0&Signature=0';
-
-	const bucketParams = {
-		Bucket: 'test',
-		Key: 'file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg',
-		ResponseContentDisposition: 'attachment; filename="what.jpeg"'
-	};
+		// eslint-disable-next-line max-len
+		'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W';
 
 	const rowGetted = {
 		id: 20,
@@ -32,7 +29,7 @@ describe('File List Api', () => {
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/jpeg',
-		path: 'file/a87a83d3-f494-4069-a0f7-fa0894590072.jpeg',
+		path,
 		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -46,7 +43,7 @@ describe('File List Api', () => {
 		claimId: 7,
 		size: 8405,
 		mimeType: 'text/plain',
-		path: 'file/a87a83d3-f494-4069-a0f7-fa0894590073.txt',
+		path,
 		type: 'other',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -81,31 +78,17 @@ describe('File List Api', () => {
 		userModified: null
 	};
 
-	const apiExtendedSimple = ({
-		bucket,
-		shouldAddUrl = false
-	} = {}) => class API extends SlsApiFileList {
-
-		get bucket() {
-			return bucket;
-		}
-
-		get shouldAddUrl() {
-			return shouldAddUrl;
-		}
+	const signedFiles = {
+		// eslint-disable-next-line max-len
+		'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png': 'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W'
 	};
 
 	const apiCustom = ({
-		bucket,
 		postValidateHook = () => true,
 		formatFileData = data => data,
 		customAvailableFilters = [],
 		customSortableFields = []
 	} = {}) => class API extends SlsApiFileList {
-
-		get bucket() {
-			return bucket;
-		}
 
 		get customAvailableFilters() {
 			return customAvailableFilters;
@@ -124,7 +107,7 @@ describe('File List Api', () => {
 		}
 	};
 
-	context('When Should not add url', () => {
+	context('When the implementation is not valid', () => {
 
 		APITest(apiCustom({
 			customSortableFields: 'order'
@@ -136,10 +119,13 @@ describe('File List Api', () => {
 					code: 400
 				},
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get');
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.notCalled(BaseModel.prototype.get);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			}
 		]);
@@ -154,10 +140,13 @@ describe('File List Api', () => {
 					code: 400
 				},
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get');
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.notCalled(BaseModel.prototype.get);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			}
 		]);
@@ -172,10 +161,13 @@ describe('File List Api', () => {
 					code: 400
 				},
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get');
+					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.notCalled(BaseModel.prototype.get);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			}
 		]);
@@ -191,13 +183,15 @@ describe('File List Api', () => {
 				},
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
-					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 						limit: 60,
 						page: 1
 					});
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			}
 		]);
@@ -212,23 +206,29 @@ describe('File List Api', () => {
 					code: 200,
 					body: [{
 						...rowFormatted2,
+						url,
 						order: 1
 					}]
 				},
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted2]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: signedFiles });
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 						limit: 60,
 						page: 1
 					});
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			}
 		]);
+	});
 
-		APITest(apiExtendedSimple(), [
+	context('When the implementation is valid', () => {
+
+		APITest(SlsApiFileList, [
 			{
 				description: 'Should return empty array in body when not exists rows',
 				session: true,
@@ -238,12 +238,14 @@ describe('File List Api', () => {
 				},
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
 						limit: 60,
 						page: 1
 					});
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			},
 			{
@@ -251,7 +253,7 @@ describe('File List Api', () => {
 				request: {},
 				session: true,
 				response: {
-					body: [rowFormatted2],
+					body: [{ ...rowFormatted2, url }],
 					headers: {
 						'x-janis-total': 1
 					},
@@ -260,6 +262,7 @@ describe('File List Api', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted2]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: signedFiles });
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -267,37 +270,17 @@ describe('File List Api', () => {
 						limit: 60,
 						page: 1
 					});
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			}
 		]);
-	});
 
-	context('When Bucket is not setted but should add Url', () => {
-
-		APITest(apiExtendedSimple({ shouldAddUrl: true }), [{
-			request: {},
-			description: 'Should return 400 if bucket is not defined',
-			session: true,
-			response: { code: 400, body: { message: SlsApiFileListError.messages.BUCKET_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({ bucket: 123, shouldAddUrl: true }), [{
-			description: 'Should return 400 if bucket is not a string',
-			request: {},
-			session: true,
-			response: { code: 400, body: { message: SlsApiFileListError.messages.BUCKET_NOT_STRING } }
-		}]);
-	});
-
-	context('When Bucket is setted', () => {
-
-		APITest(apiExtendedSimple({ bucket: 'test', shouldAddUrl: true }), [
+		APITest(SlsApiFileList, [
 			{
 				description: 'Should return empty array in body when not exists rows',
 				session: true,
 				response: {
-					code: 200,
-					body: []
+					code: 200
 				},
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
@@ -323,7 +306,7 @@ describe('File List Api', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').resolves(url);
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: signedFiles });
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -331,8 +314,7 @@ describe('File List Api', () => {
 						limit: 60,
 						page: 1
 					});
-
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			},
 			{
@@ -345,7 +327,7 @@ describe('File List Api', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').rejects();
+					sandbox.stub(Invoker, 'serviceSafeClientCall').rejects({ statusCode: 500, payload: {} });
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -353,8 +335,7 @@ describe('File List Api', () => {
 						limit: 60,
 						page: 1
 					});
-
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			},
 			{
@@ -371,9 +352,7 @@ describe('File List Api', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([rowGetted]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
-					sandbox.stub(S3, 'getSignedUrl').rejects({
-						statusCode: 404
-					});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: {} });
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -381,16 +360,15 @@ describe('File List Api', () => {
 						limit: 60,
 						page: 1
 					});
-
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sinon.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetSignedFiles', 'defaultClient', { paths: [path] });
 				}
 			},
 			{
-				description: 'Should return 200 and not make S3 request when path is not setted',
+				description: 'Should return 200 and not make Storage request when path is not setted',
 				request: {},
 				session: true,
 				response: {
-					body: [{ ...rowFormatted, url: undefined }],
+					body: [{ ...rowFormatted, url: null }],
 					headers: {
 						'x-janis-total': 1
 					},
@@ -398,13 +376,11 @@ describe('File List Api', () => {
 				},
 				before: sandbox => {
 
-					const { path, ...fileWithOutPath } = rowGetted;
+					const { path: pathSaved, ...fileWithOutPath } = rowGetted;
 
 					sandbox.stub(BaseModel.prototype, 'get').resolves([fileWithOutPath]);
 					sandbox.stub(BaseModel.prototype, 'getTotals').resolves({ total: 1 });
-
-					sandbox.spy(S3, 'getSignedUrl');
-
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.getTotals);
@@ -412,8 +388,7 @@ describe('File List Api', () => {
 						limit: 60,
 						page: 1
 					});
-
-					sandbox.assert.notCalled(S3.getSignedUrl);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			}
 		]);
@@ -427,7 +402,7 @@ describe('File List Api', () => {
 			dateCreated: '2019-02-22T21:30:59.000Z'
 		};
 
-		APITest(apiExtendedSimple(), Object.keys(filters).map(key => {
+		APITest(SlsApiFileList, Object.keys(filters).map(key => {
 			const filter = filters[key];
 			const filterValue = key === 'dateCreated' ? new Date(filters[key]) : filters[key];
 
@@ -443,9 +418,10 @@ describe('File List Api', () => {
 				response: {
 					code: 200
 				},
+				session: true,
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get');
-					BaseModel.prototype.get.returns([]);
+					sandbox.stub(BaseModel.prototype, 'get').returns([]);
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -455,6 +431,7 @@ describe('File List Api', () => {
 							[key]: filterValue
 						}
 					});
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			};
 		}));
@@ -485,9 +462,10 @@ describe('File List Api', () => {
 				response: {
 					code: 200
 				},
+				session: true,
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get');
-					BaseModel.prototype.get.returns([]);
+					sandbox.stub(BaseModel.prototype, 'get').returns([]);
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -497,6 +475,7 @@ describe('File List Api', () => {
 							[key]: filterValue
 						}
 					});
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			};
 		}));
@@ -510,7 +489,7 @@ describe('File List Api', () => {
 			'dateCreated'
 		];
 
-		APITest(apiExtendedSimple(),
+		APITest(SlsApiFileList,
 			sorts.reduce((accum, sort) => ([
 				...accum,
 				{
@@ -523,9 +502,10 @@ describe('File List Api', () => {
 					response: {
 						code: 200
 					},
+					session: true,
 					before: sandbox => {
-						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.resolves([]);
+						sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -535,6 +515,7 @@ describe('File List Api', () => {
 								[sort]: 'asc'
 							}
 						});
+						sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 					}
 				},
 				{
@@ -548,9 +529,10 @@ describe('File List Api', () => {
 					response: {
 						code: 200
 					},
+					session: true,
 					before: sandbox => {
-						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.resolves([]);
+						sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -560,6 +542,7 @@ describe('File List Api', () => {
 								[sort]: 'desc'
 							}
 						});
+						sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 					}
 				}
 			]), [])
@@ -588,9 +571,10 @@ describe('File List Api', () => {
 					response: {
 						code: 200
 					},
+					session: true,
 					before: sandbox => {
-						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.resolves([]);
+						sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -600,6 +584,7 @@ describe('File List Api', () => {
 								[sort]: 'asc'
 							}
 						});
+						sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 					}
 				},
 				{
@@ -613,9 +598,10 @@ describe('File List Api', () => {
 					response: {
 						code: 200
 					},
+					session: true,
 					before: sandbox => {
-						sandbox.stub(BaseModel.prototype, 'get');
-						BaseModel.prototype.get.resolves([]);
+						sandbox.stub(BaseModel.prototype, 'get').resolves([]);
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 					},
 					after: (response, sandbox) => {
 						sandbox.assert.calledOnceWithExactly(BaseModel.prototype.get, {
@@ -625,6 +611,7 @@ describe('File List Api', () => {
 								[sort]: 'desc'
 							}
 						});
+						sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 					}
 				}
 			]), [])

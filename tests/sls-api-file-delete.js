@@ -1,29 +1,20 @@
 'use strict';
 
 const APITest = require('@janiscommerce/api-test');
-const S3 = require('@janiscommerce/s3');
+const { Invoker } = require('@janiscommerce/lambda');
+
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileDelete, SlsApiFileDeleteError } = require('../lib/index');
-
 
 describe('SlsApiFileDelete', () => {
 
 	const apiExtendedSimple = ({
-		entityIdField,
-		bucket,
-		model = BaseModel
+		entityIdField
 	} = {}) => {
 		class API extends SlsApiFileDelete {
+
 			get entityIdField() {
 				return entityIdField;
-			}
-
-			get bucket() {
-				return bucket;
-			}
-
-			get model() {
-				return model;
 			}
 		}
 
@@ -31,8 +22,7 @@ describe('SlsApiFileDelete', () => {
 	};
 
 	const defaultApiExtended = apiExtendedSimple({
-		entityIdField: 'test',
-		bucket: 'test'
+		entityIdField: 'test'
 	});
 
 	const apiCustom = ({
@@ -49,46 +39,30 @@ describe('SlsApiFileDelete', () => {
 		}
 	};
 
+	const path = 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png';
+	const fileGetted = {
+		path
+	};
 
 	context('Validate', () => {
 
-		APITest(apiExtendedSimple({ model: null }), [{
-			description: 'Should return 400 if model is not defined',
-			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({ model: 'model' }), [{
-			description: 'Should return 400 if model is not a Class',
-			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_IS_NOT_MODEL_CLASS } }
-		}]);
-
 		APITest(apiExtendedSimple(), [{
 			description: 'Should return 400 if entityIdField is not defined',
+			session: true,
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.ENTITY_ID_FIELD_NOT_DEFINED } }
 		}]);
 
 		APITest(apiExtendedSimple({ entityIdField: 123 }), [{
 			description: 'Should return 400 if entityIdField is not a string',
+			session: true,
 			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.ENTITY_ID_FIELD_NOT_STRING } }
-		}]);
-
-		APITest(apiExtendedSimple({ entityIdField: 'test' }), [{
-			description: 'Should return 400 if bucket is not defined',
-			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.BUCKET_NOT_DEFINED } }
-		}]);
-
-		APITest(apiExtendedSimple({
-			entityIdField: 'test',
-			bucket: 123
-		}), [{
-			description: 'Should return 400 if bucket is not a string',
-			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.BUCKET_NOT_STRING } }
 		}]);
 
 		APITest(apiCustom({
 			postValidateHook: () => { throw new Error(); }
 		}), [{
 			description: 'Should return 400 if custom validation fails',
+			session: true,
 			response: { code: 400 }
 		}]);
 	});
@@ -106,12 +80,13 @@ describe('SlsApiFileDelete', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').rejects();
 					sandbox.stub(BaseModel.prototype, 'remove');
-					sandbox.stub(S3, 'deleteObject');
+					sandbox.stub(Invoker, 'serviceSafeClientCall');
+
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledOnce(BaseModel.prototype.get);
 					sandbox.assert.notCalled(BaseModel.prototype.remove);
-					sandbox.assert.notCalled(S3.deleteObject);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			},
 			{
@@ -122,16 +97,14 @@ describe('SlsApiFileDelete', () => {
 				},
 				response: { code: 500 },
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get').resolves([{
-						path: '/files/file.jpg'
-					}]);
+					sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 					sandbox.stub(BaseModel.prototype, 'remove').rejects();
-					sandbox.stub(S3, 'deleteObject');
+					sandbox.stub(Invoker, 'serviceSafeClientCall');
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledOnce(BaseModel.prototype.get);
 					sandbox.assert.calledOnce(BaseModel.prototype.remove);
-					sandbox.assert.notCalled(S3.deleteObject);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			},
 			{
@@ -142,16 +115,14 @@ describe('SlsApiFileDelete', () => {
 				},
 				response: { code: 500 },
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get').resolves([{
-						path: '/files/file.jpg'
-					}]);
+					sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 					sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
-					sandbox.stub(S3, 'deleteObject').rejects();
+					sandbox.stub(Invoker, 'serviceSafeClientCall').rejects();
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledOnce(BaseModel.prototype.get);
 					sandbox.assert.calledOnce(BaseModel.prototype.remove);
-					sandbox.assert.calledOnce(S3.deleteObject);
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'DeleteFiles', 'defaultClient', { paths: [path] });
 				}
 			},
 			{
@@ -167,12 +138,12 @@ describe('SlsApiFileDelete', () => {
 				before: sandbox => {
 					sandbox.stub(BaseModel.prototype, 'get').resolves([]);
 					sandbox.stub(BaseModel.prototype, 'remove');
-					sandbox.stub(S3, 'deleteObject');
+					sandbox.stub(Invoker, 'serviceSafeClientCall');
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledOnce(BaseModel.prototype.get);
 					sandbox.assert.notCalled(BaseModel.prototype.remove);
-					sandbox.assert.notCalled(S3.deleteObject);
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
 				}
 			},
 			{
@@ -183,23 +154,16 @@ describe('SlsApiFileDelete', () => {
 				},
 				response: { code: 200 },
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get').resolves([{
-						path: '/files/file.jpg'
-					}]);
+					sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 					sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
-					sandbox.stub(S3, 'deleteObject').resolves();
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves();
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 						filters: { test: 1, id: 2 }
 					});
-
 					sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
-
-					sandbox.assert.calledWithExactly(S3.deleteObject, {
-						Bucket: 'test',
-						Key: '/files/file.jpg'
-					});
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'DeleteFiles', 'defaultClient', { paths: [path] });
 				}
 			},
 			{
@@ -210,25 +174,16 @@ describe('SlsApiFileDelete', () => {
 				},
 				response: { code: 200 },
 				before: sandbox => {
-					sandbox.stub(BaseModel.prototype, 'get').resolves([{
-						path: '/files/file.jpg'
-					}]);
+					sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 					sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
-					sandbox.stub(S3, 'deleteObject').rejects({
-						statusCode: 404
-					});
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves();
 				},
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 						filters: { test: 1, id: 2 }
 					});
-
 					sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
-
-					sandbox.assert.calledWithExactly(S3.deleteObject, {
-						Bucket: 'test',
-						Key: '/files/file.jpg'
-					});
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'DeleteFiles', 'defaultClient', { paths: [path] });
 				}
 			}
 		]);
@@ -243,23 +198,16 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 200 },
 			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([{
-					path: '/files/file.jpg'
-				}]);
+				sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 				sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
-				sandbox.stub(S3, 'deleteObject').resolves();
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves();
 			},
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }
 				});
-
 				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
-
-				sandbox.assert.calledWithExactly(S3.deleteObject, {
-					Bucket: 'test',
-					Key: '/files/file.jpg'
-				});
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'DeleteFiles', 'defaultClient', { paths: [path] });
 			}
 		}
 	]);
@@ -275,23 +223,17 @@ describe('SlsApiFileDelete', () => {
 			},
 			response: { code: 500 },
 			before: sandbox => {
-				sandbox.stub(BaseModel.prototype, 'get').resolves([{
-					path: '/files/file.jpg'
-				}]);
+				sandbox.stub(BaseModel.prototype, 'get').resolves([fileGetted]);
 				sandbox.stub(BaseModel.prototype, 'remove').resolves(1);
-				sandbox.stub(S3, 'deleteObject').resolves();
+				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves();
+
 			},
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithExactly(BaseModel.prototype.get, {
 					filters: { test: 1, id: 2 }
 				});
-
 				sandbox.assert.calledWithExactly(BaseModel.prototype.remove, { id: 2 });
-
-				sandbox.assert.calledWithExactly(S3.deleteObject, {
-					Bucket: 'test',
-					Key: '/files/file.jpg'
-				});
+				sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'DeleteFiles', 'defaultClient', { paths: [path] });
 			}
 		}
 	]);
