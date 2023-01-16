@@ -2,6 +2,7 @@
 
 ![Build Status](https://github.com/janis-commerce/sls-api-upload/workflows/Build%20Status/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/janis-commerce/sls-api-upload/badge.svg?branch=master)](https://coveralls.io/github/janis-commerce/sls-api-upload?branch=master)
+[![npm version](https://badge.fury.io/js/%40janiscommerce%2Fsls-api-upload.svg)](https://www.npmjs.com/package/@janiscommerce/sls-api-upload)
 
 This package contains several modules to handle upload files, list it, or delete it for **Janis** APIs.
 
@@ -15,8 +16,7 @@ npm install @janiscommerce/sls-api-upload
 In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
 
 * A [Basic Model](#BaseFileModel)
-* APIs for **Upload** and **Save** Files
-	* [SLS-API-Upload](#SlsApiUpload)
+* APIs for **Save** Files
 	* [SLS-API-File-Relation](#SlsApiFileRelation)
 * APIs for **List** and **Get** Files
 	* [SLS-API-List](#SlsApiFileList)
@@ -123,167 +123,12 @@ static get fields() {
 
 </details>
 
-
-## SlsApiUpload
-
-<details>
-	<summary>This Module allows you to create an API to get a valid pre-signed URL and headers in order to upload a file to a S3 Bucket.</summary>
-
-> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
-
-:warning: **IMPORTANT**: When you get the response you can use it to make the request with the file.
-
-If you want to see more about it:
-* [AWS preSigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
-* [Upload an Image using Postman and S3 preSigned URL](https://medium.com/@lakshmanLD/upload-file-to-s3-using-lambda-the-pre-signed-url-way-158f074cda6c), see Step 2.
-
-### API Example
-
-```js
-// in src/api/item/file-upload/list.js
-'use strict';
-
-const { SlsApiUpload } = require('@janiscommerce/sls-api-upload');
-
-module.exports = class MyApiUpload extends SlsApiUpload {
-	get bucket() {
-		return 'bucket-name';
-	}
-
-	get path() {
-		return 'files/';
-	}
-
-	get availableTypes() {
-		return ['application/pdf']
-	}
-
-	get expiration() {
-		return 300;
-	}
-
-	get sizeRange() {
-		return [1, 1024 * 1024 * 5]; // 1byte - 5mb
-	}
-};
-
-```
-
-### Request Example
-
-```js
-{
-	fileName: 'my-file.jpg'
-}
-```
-
-### Response Example
-
-```js
-{
-	url: 'https://s3.amazonaws.com/bucket-name',
-	fields: {
-		'Content-Type': 'image/jpg',
-		key: 'files/06311e0c-6f32-4a13-93e4-c89a7765e571.jpg',
-		bucket: 'bucket-name',
-		'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
-		'X-Amz-Credential': 'AAAAAAA99BB0BOCCCCCC/10000000/us-east-2/s3/aws4_request',
-		'X-Amz-Date': '20200406T185857Z',
-		Policy: 'eyJleHBpcmF0aW9uIjoiMjAyMC0wNC0wNlQxODo1OTo1N1oiLCJjb25kaXRpb25zIjpbWyJjb250ZW5=',
-		'X-Amz-Signature': '4e99b9e991df4aa4370e88aa3390000d1a543527fcc1cdb6583b193aed00bf00'
-	}
-}
-```
-
-### Getters
-
-The following getters can be used to customize and validate your `SlsApiUpload`.
-
-
-#### get bucket()
-
-*Required*
-
-This is used to indicate the bucket where the file should be saved
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
-
-#### get path()
-
-*Optional*
-
-*Default*: `""`
-
-This is used to indicate the path where the file should be saved
-
-```js
-get path() {
-	return 'files/pdf/';
-}
-```
-
-#### get availableTypes()
-
-*Optional*
-
-*Default*: `[]`
-
-This is used to indicate the accepted file types to be uploaded. If you not define them, all types will be valid. Example:
-
-```js
-get availableTypes() {
-	return ['image/jpg', 'image/jpeg', 'image/png']
-}
-```
-
-#### get expiration()
-
-*Optional*
-
-*Default*: `60`
-
-This is used to indicate the expiration time in seconds of the generated URL
-
-```js
-get expiration() {
-	return 120;
-}
-```
-
-#### get sizeRange()
-
-*Optional*
-
-*Default*: `[1,10485760] // 1B to 10MB`
-
-This is used to indicate the valid file size range to be uploaded
-
-```js
-get sizeRange() {
-	return [1, 20 * 1024 * 1024]; // 1byte - 20mb
-}
-```
-
-### Hooks
-
-This module has only one Hook:
-
-* [postValidateHook](#Common-Validation)
-
-</details>
-
 ## SlsApiFileRelation
 
 <details>
 	<summary>This Module allows you to create an API to create a Document with the file data in the Database Collection.</summary>
 
 > This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
-
-:warning: **IMPORTANT**, this API must be requested after making the upload to S3 Bucket.
 
 ### API Example
 
@@ -292,17 +137,8 @@ This module has only one Hook:
 'use strict';
 
 const { SlsApiFileRelation } = require('@janiscommerce/sls-api-upload');
-const FileModel = require('../models/your-file-model');
 
 class MyApiRelation extends SlsApiFileRelation {
-
-	get bucket() {
-		return 'bucket-name';
-	}
-
-	get model() {
-		return FileModel;
-	}
 
 	get entityIdField() {
 		return 'productId';
@@ -337,25 +173,9 @@ This API response with status-code `201` and `id` if success to Save the file da
 }
 ```
 
-### Getters
-
-The following getters can be used to customize and validate your API:
-
-#### get bucket()
-
-*Required*
-
-This is used to indicate the bucket where the file was saved
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
-
 #### get model()
 
-*Required*
+*Optional*
 
 This is used to indicate the Model class that should be used to save the file relationship
 
@@ -527,30 +347,6 @@ get customAvailableFilters() {
 }
 ```
 
-### Adding the URL
-
-If you want the file-data documents have an URL, for example because are images an you wanted to show them, you can added by changing this getter and adding an S3 bucket.
-
-#### get shouldAddUrl()
-
-Only must return a truthy value, by *default* is `false`. If the bucket is not setted will fails with status-code `400`.
-
-```js
-get shouldAddUrl() {
-	return true;
-}
-```
-
-#### get bucket()
-
-This is used to indicate the bucket where the file must be found.
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
-
 ### Format
 
 You can format each file-data document and/or the file's URL.
@@ -565,18 +361,6 @@ formatFileData({ order, ...fileData }) {
 		...fileData,
 		order: `#${order}`
 	};
-}
-```
-
-#### formatUrl(path)
-
-By *default* it returns an URL signed to have access to S3 Bucket, which is add to `url` field.
-
-But if you wanted to changed this behaviour you can overwrigth it.
-
-```js
-formatUrl(path) {
-	return `${this.bucket}/public/${path}`;
 }
 ```
 
@@ -605,33 +389,18 @@ const { SlsApiFileGet } = require('@janiscommerce/sls-api-upload');
 
 class MyApiGet extends SlsApiFileGet {
 
-	get bucket() {
-		return 'bucket-name';
-	}
 }
 ```
 
 ### URL field
 
-This API module always return the file-data document with the `url` field, so you must defined a S3 Bucket, otherwise it fails with status-code `400`.
+This API module always return the file-data document with the `url` field.
 
-### get bucket()
-
-*Required*
-
-This is used to indicate the bucket where the file can be found.
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
 
 ### Format
 
 The File-Document can be formatted in the same way as in the [SLS-API-List](#SlsApiFileList) using
 * [formatFileData](#formatfiledatafiledata)
-* [formatUrl](#formaturlpath)
 
 ### Hooks
 
@@ -655,17 +424,8 @@ This module has only one Hook:
 'use strict';
 
 const { SlsApiFileDelete } = require('@janiscommerce/sls-api-upload');
-const FileModel = require('../models/your-file-model');
 
 class MyApiDelete extends SlsApiFileDelete {
-
-	get bucket() {
-		return 'bucket-name';
-	}
-
-	get model() {
-		return FileModel;
-	}
 
 	get entityIdField() {
 		return 'productId';
@@ -677,20 +437,9 @@ class MyApiDelete extends SlsApiFileDelete {
 
 The following getters can be used to customize and validate your SlsApiFileDelete.
 
-#### get bucket()
-
-*Required*
-
-This is used to indicate the bucket where the file is.
-
-```js
-get bucket() {
-	return 'bucket-name';
-}
-```
 #### get model()
 
-*Required*
+*Optional*
 
 This is used to indicate the Model class that should be used to remove the file relationship
 
@@ -727,7 +476,6 @@ This hooks is async and execute after delete the document from S3 Bucket. You ca
 
 ```js
  postDeleteHook(itemDeleted) {
-
 	return EventEmitter.emit({
 		entity: 'item',
 		event: 'deleted',
