@@ -10,12 +10,12 @@ const BaseModel = require('../lib/base-model');
 
 describe('File List Api', () => {
 
-	afterEach(() => {
-		sinon.restore();
-	});
-
 	beforeEach(() => {
 		sinon.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
+	});
+
+	afterEach(() => {
+		sinon.restore();
 	});
 
 	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';

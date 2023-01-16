@@ -16,7 +16,9 @@ npm install @janiscommerce/sls-api-upload
 In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
 
 * A [Basic Model](#BaseFileModel)
-* APIs for **Save** Files
+* API for **Get Credentials** to upload a File
+	* [SLS-API-File-Relation](#SlsApiFileGetCredentials)
+* API for **Relate** File to a entity
 	* [SLS-API-File-Relation](#SlsApiFileRelation)
 * APIs for **List** and **Get** Files
 	* [SLS-API-List](#SlsApiFileList)
@@ -123,6 +125,99 @@ static get fields() {
 
 </details>
 
+## SlsApiFileGetCredentials
+
+<details>
+	<summary>This Module allows you to create an API to get the credentials to upload multiples Document.</summary>
+
+> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
+
+### API Example
+
+```js
+// in src/api/{entity}/file-get-credentials/list.js
+'use strict';
+
+const { SlsApiFileGetCredentials } = require('@janiscommerce/sls-api-upload');
+
+class MyApiRelation extends SlsApiFileGetCredentials {
+
+	get entity() {
+		return 'entityName';
+	}
+}
+```
+
+#### get entity()
+
+*Required*
+
+This is used to indicate the entity name, it will be use in the file path when it's saved
+
+```js
+get entity() {
+	return 'entityName';
+}
+```
+
+### Request Data
+
+This API has the following required request data:
+
+- **fileNames**: (string) The full key of the file stored in S3.
+- **expiration**: (string) The name and extension of the file.
+
+#### Request data example
+
+```json
+{
+	"fileNames": ["front-image.png"],
+	"expiration": 120
+}
+```
+
+### Response
+
+This API response with status-code `201` and `id` if success to Save the file data Document.
+
+```json
+// status-code 201
+{
+	"fileNames": {
+		"front-image.png": {
+			"url": "https://s3.amazonaws.com/janis-storage-service-prod",
+			"fields": {
+				"Content-Type": "image/png",
+				"key": "cdn/files/defaultClient/9ea2lbLalrQrjkoWqyJ5gOsJGBtzbml1.png",
+				"bucket": "janis-storage-service-beta",
+				"X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+				"X-Amz-Credential": "ASIASJHJMNZZ5MVD5YHU/20230112/us-east-1/s3/aws4_request",
+				"X-Amz-Date": "20230112T114452Z",
+				"X-Amz-Security-Token": "IQoJb3JpZ2luX2VjEGQaCXVzLWVhc3QtMSJGMEQCIHJFEKy124C1P0svU5z3M/szk8tN92pSnn5uR=",
+				"Policy": "eyJleHBpcmF0aW9uIjoiMjAyMy0wMS0xMlQxMTo0NTo1MloiLCJjb25kaXRpb124IjpbWyJjb250ZW50LWxlbmd0aC1y",
+				"X-Amz-Signature": "c9b0e78d8b166847c2583383ac5da48e92e95501ed2991058e5a1244c1514aba"
+			}
+		}
+	}
+}
+```
+
+#### get model()
+
+*Optional*
+
+This is used to indicate the Model class that should be used to save the file relationship
+
+```js
+const FileModel = require('../models/your-file-model');
+
+get model() {
+	return FileModel;
+}
+```
+
+</details>
+
 ## SlsApiFileRelation
 
 <details>
@@ -133,7 +228,7 @@ static get fields() {
 ### API Example
 
 ```js
-// in src/api/item/file-upload/post.js
+// in src/api/{entity}/file/post.js
 'use strict';
 
 const { SlsApiFileRelation } = require('@janiscommerce/sls-api-upload');
@@ -231,7 +326,7 @@ Request data example;
 This module has 2 Hooks:
 
 * [postValidateHook](#Common-Validation)
-* postSaveHook
+* [postSaveHook](####postSaveHook)
 
 #### postSaveHook(id, dataFormatted)
 
@@ -483,6 +578,73 @@ This hooks is async and execute after delete the document from S3 Bucket. You ca
 		id: itemDeleted.id
 	});
 }
+```
+
+</details>
+
+## Serverless Example
+
+<details>
+	<summary>This is an example to implement in the serverless configuration.</summary>
+
+> This Configuration file use this packages [@sls-helper](https://www.npmjs.com/package/sls-helper) and [@sls-helper-plugin-janis](https://www.npmjs.com/package/sls-helper-plugin-janis)
+
+```json
+[
+	[
+		"janis.api",
+		{
+			"path": "/{entityName}/{id}/file",
+			"method": "get",
+			"methodName": "list",
+			"authorizer": "FullAuthorizer",
+			"cors": true
+		}
+	],
+	[
+		"janis.api",
+		{
+			"path": "/{entityName}/{id}/file/{fileId}",
+			"method": "get",
+			"authorizer": "FullAuthorizer",
+			"cors": true
+		}
+	],
+	[
+		"janis.api",
+		{
+			"path": "/{entityName}/{id}/file/{fileId}",
+			"method": "delete",
+			"authorizer": "FullAuthorizer",
+			"cors": true
+		}
+	],
+	[
+		"janis.api",
+		{
+			"path": "/{entityName}/{id}/file",
+			"method": "post",
+			"authorizer": "FullAuthorizer",
+			"cors": true,
+			"package": {
+                "include": ["src/models/file.js", "src/api/{entityName}/file-related/post.js"]
+            }
+		}
+	],
+	[
+		"janis.api",
+		{
+			"path": "/{entityName}/{id}/file-get-credentials",
+			"method": "get",
+			"methodName": "list",
+			"authorizer": "FullAuthorizer",
+			"cors": true,
+			"package": {
+                "include": ["src/models/file.js", "src/api/{entityName}/file-related/post.js"]
+            }
+		}
+	]
+]
 ```
 
 </details>
