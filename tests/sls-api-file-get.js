@@ -12,7 +12,7 @@ describe('SlsApiFileGet', () => {
 
 	const url =
 		// eslint-disable-next-line max-len
-		'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W';
+		'https://cdn.storage.janisdev.in/cdn/files/defaultClient/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W';
 
 	const rowGetted = {
 		id: 20,
@@ -20,7 +20,7 @@ describe('SlsApiFileGet', () => {
 		claimId: 7,
 		size: 5014,
 		mimeType: 'image/png',
-		path: 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png',
+		path: 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png',
 		type: 'image',
 		dateCreated: 1576269240,
 		userCreated: 5,
@@ -41,10 +41,10 @@ describe('SlsApiFileGet', () => {
 		userModified: null
 	};
 
-	const path = 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png';
+	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';
 	const signedFiles = {
 		// eslint-disable-next-line max-len
-		'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png': 'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W'
+		'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png': 'https://cdn.storage.janisdev.in/cdn/files/defaultClient/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W'
 	};
 
 	const apiCustom = ({
