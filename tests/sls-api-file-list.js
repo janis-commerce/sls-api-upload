@@ -18,10 +18,10 @@ describe('File List Api', () => {
 		sinon.stub(ApiListData.prototype, '_getModelInstance').returns(new BaseModel());
 	});
 
-	const path = 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png';
+	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';
 	const url =
 		// eslint-disable-next-line max-len
-		'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W';
+		'https://cdn.storage.janisdev.in/cdn/files/defaultClient/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W';
 
 	const rowGetted = {
 		id: 20,
@@ -80,7 +80,7 @@ describe('File List Api', () => {
 
 	const signedFiles = {
 		// eslint-disable-next-line max-len
-		'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png': 'https://cdn.storage.janisdev.in/cdn/files/fizzmodarg/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W'
+		'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png': 'https://cdn.storage.janisdev.in/cdn/files/defaultClient/U2ZPvzsjjTeUy5v56VZjkTUyacfKyE3P.png?Expires=1673568000&Key-Pair-Id=K2P6YIJ6NYT9Z8&Signature=AKKu01bTVytc7nTrsJjHUGkn5hNCFXpHGJcDWojkzVfpb9Y2ssN47VNBQIWVE3lO8efU9W'
 	};
 
 	const apiCustom = ({

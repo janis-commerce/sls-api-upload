@@ -39,7 +39,7 @@ describe('SlsApiFileDelete', () => {
 		}
 	};
 
-	const path = 'cdn/files/fizzmodarg/a87a83d3-f494-4069-a0f7-fa0894590072.png';
+	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';
 	const fileGetted = {
 		path
 	};
