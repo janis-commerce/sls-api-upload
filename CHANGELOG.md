@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.1.0] - 2023-01-16
+## [3.1.0] - 2023-01-17
 ### Added
 - New api to get credentials to upload a file into S3
 
