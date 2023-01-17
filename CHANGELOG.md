@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.0.0] - 2023-01-16
+## [3.1.0] - 2023-01-16
+### Added
+- New api to get credentials to upload a file into S3
+
+## [3.0.1] - 2023-01-16
 ### Changed
 - Now the api `List`, `Get` and `Delete` it will be user de `Storage` Microservice lambda's
 
