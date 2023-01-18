@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.2] - 2023-01-18
+### Fixed
+- Fix returning the response in the api get credentials. Now return's an object with the fileNames key
+
 ## [3.1.1] - 2023-01-18
 ### Fixed
 - Fix getting `serviceName` to invoke `GetCredentials` lambda
