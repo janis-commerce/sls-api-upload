@@ -1,7 +1,6 @@
 'use strict';
 
 require('lllog')('none');
-const sinon = require('sinon');
 const APITest = require('@janiscommerce/api-test');
 const { Invoker } = require('@janiscommerce/lambda');
 
@@ -10,7 +9,9 @@ const { SlsApiFileGetCredentials, SlsApiFileGetCredentialsError } = require('../
 describe('SlsApiFileGetCredentials', () => {
 
 	const entity = 'entityName';
-	const requestData = { fileNames: ['image.png'], service: 'serviceName', entity };
+	const serviceName = 'serviceName';
+
+	const requestData = { fileNames: ['image.png'], serviceName, entity };
 
 	const credentials = {
 		'image.png': {
@@ -29,8 +30,14 @@ describe('SlsApiFileGetCredentials', () => {
 		}
 	};
 
+	const originalEnv = { ...process.env };
+
+	beforeEach(() => {
+		process.env.JANIS_SERVICE_NAME = serviceName;
+	});
+
 	afterEach(() => {
-		sinon.restore();
+		process.env = { ...originalEnv };
 	});
 
 	const apiCustom = ({

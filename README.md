@@ -11,6 +11,10 @@ This package contains several modules to handle upload files, list it, or delete
 npm install @janiscommerce/sls-api-upload
 ```
 
+## 🔧 Configuration
+### ENV variables
+**`JANIS_SERVICE_NAME`** (required): The name of the service that will be use to create the path when saving the file into the S3 through the Storage Microservice.
+
 ## Content
 
 In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
