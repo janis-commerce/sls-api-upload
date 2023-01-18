@@ -220,7 +220,7 @@ describe('SlsApiFileGetCredentials', () => {
 							fileNames: ['image.png']
 						}
 					},
-					response: { code: 200, body: { ...credentials } },
+					response: { code: 200, body: { fileNames: credentials } },
 					before: sandbox => {
 						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: credentials });
 					},
