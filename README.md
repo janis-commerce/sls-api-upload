@@ -21,7 +21,7 @@ In this package, you can found several modules to create APIs to manage files, u
 
 * A [Basic Model](#BaseFileModel)
 * API for **Get Credentials** to upload a File
-	* [SLS-API-File-Relation](#SlsApiFileGetCredentials)
+	* [SLS-API-File-Get-Credentials](#SlsApiFileGetCredentials)
 * API for **Relate** File to a entity
 	* [SLS-API-File-Relation](#SlsApiFileRelation)
 * APIs for **List** and **Get** Files
@@ -168,10 +168,11 @@ get entity() {
 
 This API has the following required request data:
 
-- **fileNames**: (string) The full key of the file stored in S3.
+- **fileName**: (string) The file name to upload to S3. **It's required if fileNames its not sended.**
+- **fileNames**: (array) List of file names to upload to S3. **It's required if fileName its not sended.**
 - **expiration**: (string) The name and extension of the file.
 
-#### Request data example
+#### Request filenames data example
 
 ```json
 {
@@ -202,6 +203,37 @@ This API response with status-code `201` and `id` if success to Save the file da
 				"X-Amz-Signature": "c9b0e78d8b166847c2583383ac5da48e92e95501ed2991058e5a1244c1514aba"
 			}
 		}
+	}
+}
+```
+
+#### Request filename data example
+
+```json
+{
+	"fileName": "front-image.png",
+	"expiration": 120
+}
+```
+
+### Response
+
+This API response with status-code `201` and `id` if success to Save the file data Document.
+
+```json
+// status-code 201
+{
+	"url": "https://s3.amazonaws.com/janis-storage-service-prod",
+	"fields": {
+		"Content-Type": "image/png",
+		"key": "cdn/files/defaultClient/9ea2lbLalrQrjkoWqyJ5gOsJGBtzbml1.png",
+		"bucket": "janis-storage-service-beta",
+		"X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+		"X-Amz-Credential": "ASIASJHJMNZZ5MVD5YHU/20230112/us-east-1/s3/aws4_request",
+		"X-Amz-Date": "20230112T114452Z",
+		"X-Amz-Security-Token": "IQoJb3JpZ2luX2VjEGQaCXVzLWVhc3QtMSJGMEQCIHJFEKy124C1P0svU5z3M/szk8tN92pSnn5uR=",
+		"Policy": "eyJleHBpcmF0aW9uIjoiMjAyMy0wMS0xMlQxMTo0NTo1MloiLCJjb25kaXRpb124IjpbWyJjb250ZW50LWxlbmd0aC1y",
+		"X-Amz-Signature": "c9b0e78d8b166847c2583383ac5da48e92e95501ed2991058e5a1244c1514aba"
 	}
 }
 ```

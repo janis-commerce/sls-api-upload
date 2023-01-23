@@ -11,23 +11,29 @@ describe('SlsApiFileGetCredentials', () => {
 	const entity = 'entityName';
 	const serviceName = 'serviceName';
 
-	const requestData = { fileNames: ['image.png'], serviceName, entity };
+	const requestData = { serviceName, entity };
+	const requestDataMultiplesFiles = {
+		...requestData,
+		fileNames: ['image.png']
+	};
+
+	const credential = {
+		url: 'https://s3.amazonaws.com/janis-storage-service-beta',
+		fields: {
+			'Content-Type': 'image/png',
+			key: 'cdn/files/defaultClient/9ea2lbLalrQrjkoWqyJ5gOsJGBtzbml1.png',
+			bucket: 'janis-storage-service-beta',
+			'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+			'X-Amz-Credential': 'ASIASJHJMNZZ5MVD5YHU/20230112/us-east-1/s3/aws4_request',
+			'X-Amz-Date': '20230112T114452Z',
+			'X-Amz-Security-Token': 'IQoJb3JpZ2luX2VjEGQaCXVzLWVhc3QtMSJGMEQCIHJFEKyCqC1P0svU5z3M/szk8tN92pSnn5uR=',
+			Policy: 'eyJleHBpcmF0aW9uIjoiMjAyMy0wMS0xMlQxMTo0NTo1MloiLCJjb25kaXRpb25zIjpbWyJjb250ZW50LWxlbmd0aC1y',
+			'X-Amz-Signature': 'c9b0e78d8b166847c2583383ac5da48e92e95501ed2991058e5a97e4c1514aba'
+		}
+	};
 
 	const credentials = {
-		'image.png': {
-			url: 'https://s3.amazonaws.com/janis-storage-service-beta',
-			fields: {
-				'Content-Type': 'image/png',
-				key: 'cdn/files/defaultClient/9ea2lbLalrQrjkoWqyJ5gOsJGBtzbml1.png',
-				bucket: 'janis-storage-service-beta',
-				'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
-				'X-Amz-Credential': 'ASIASJHJMNZZ5MVD5YHU/20230112/us-east-1/s3/aws4_request',
-				'X-Amz-Date': '20230112T114452Z',
-				'X-Amz-Security-Token': 'IQoJb3JpZ2luX2VjEGQaCXVzLWVhc3QtMSJGMEQCIHJFEKyCqC1P0svU5z3M/szk8tN92pSnn5uR=',
-				Policy: 'eyJleHBpcmF0aW9uIjoiMjAyMy0wMS0xMlQxMTo0NTo1MloiLCJjb25kaXRpb25zIjpbWyJjb250ZW50LWxlbmd0aC1y',
-				'X-Amz-Signature': 'c9b0e78d8b166847c2583383ac5da48e92e95501ed2991058e5a97e4c1514aba'
-			}
-		}
+		'image.png': credential
 	};
 
 	const originalEnv = { ...process.env };
@@ -166,7 +172,7 @@ describe('SlsApiFileGetCredentials', () => {
 						sandbox.stub(Invoker, 'serviceSafeClientCall').rejects(new Error('some error'));
 					},
 					after: (afterResponse, sandbox) => {
-						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestData);
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
 					}
 				},
 				{
@@ -184,7 +190,7 @@ describe('SlsApiFileGetCredentials', () => {
 
 					},
 					after: (afterResponse, sandbox) => {
-						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestData);
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
 					}
 				},
 				{
@@ -202,7 +208,7 @@ describe('SlsApiFileGetCredentials', () => {
 
 					},
 					after: (afterResponse, sandbox) => {
-						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestData);
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
 					}
 				}
 			]);
@@ -222,10 +228,30 @@ describe('SlsApiFileGetCredentials', () => {
 					},
 					response: { code: 200, body: { fileNames: credentials } },
 					before: sandbox => {
-						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: credentials });
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: { fileNames: credentials } });
 					},
 					after: (afterResponse, sandbox) => {
-						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestData);
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
+					}
+				},
+				{
+					description: 'Should return 200 with the credentials',
+					session: true,
+					request: {
+						pathParameters: [1],
+						data: {
+							fileName: 'image.png'
+						}
+					},
+					response: { code: 200, body: credential },
+					before: sandbox => {
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: credential });
+					},
+					after: (afterResponse, sandbox) => {
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', {
+							...requestData,
+							fileName: 'image.png'
+						});
 					}
 				}
 			]);
