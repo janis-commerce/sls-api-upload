@@ -97,13 +97,31 @@ describe('SlsApiFileGetCredentials', () => {
 				}
 			},
 			{
-				description: 'Should return 400 with invalid expiration',
+				description: 'Should return 400 with invalid credential expiration',
 				session: true,
 				request: {
 					pathParameters: [1],
 					data: {
 						fileNames: ['image.png'],
-						expiration: 'foo'
+						credentialExpiration: 'foo'
+					}
+				},
+				response: { code: 400 },
+				before: sandbox => {
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves();
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.notCalled(Invoker.serviceSafeClientCall);
+				}
+			},
+			{
+				description: 'Should return 400 with invalid file expiration',
+				session: true,
+				request: {
+					pathParameters: [1],
+					data: {
+						fileNames: ['image.png'],
+						fileExpiration: 'foo'
 					}
 				},
 				response: { code: 400 },
@@ -194,7 +212,7 @@ describe('SlsApiFileGetCredentials', () => {
 					}
 				},
 				{
-					description: 'Should return 200 when the data is wrong',
+					description: 'Should return 500 when the data is wrong',
 					session: true,
 					request: {
 						pathParameters: [1],
@@ -251,6 +269,29 @@ describe('SlsApiFileGetCredentials', () => {
 						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', {
 							...requestData,
 							fileName: 'image.png'
+						});
+					}
+				},
+				{
+					description: 'Should return 200 when request with the complete data',
+					session: true,
+					request: {
+						pathParameters: [1],
+						data: {
+							fileNames: ['image.png'],
+							credentialExpiration: '60',
+							fileExpiration: 'oneDay'
+						}
+					},
+					response: { code: 200, body: { fileNames: credentials } },
+					before: sandbox => {
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: { fileNames: credentials } });
+					},
+					after: (afterResponse, sandbox) => {
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', {
+							...requestDataMultiplesFiles,
+							credentialExpiration: '60',
+							fileExpiration: 'oneDay'
 						});
 					}
 				}
