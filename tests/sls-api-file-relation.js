@@ -10,8 +10,13 @@ describe('SlsApiRelation', () => {
 
 	const apiExtendedSimple = ({
 		entityIdField,
-		customFieldsStruct
+		customFieldsStruct,
+		model = BaseModel
 	} = {}) => class API extends SlsApiFileRelation {
+
+		get model() {
+			return model;
+		}
 
 		get entityIdField() {
 			return entityIdField;
@@ -60,6 +65,18 @@ describe('SlsApiRelation', () => {
 	};
 
 	context('Validate', () => {
+
+		APITest(apiExtendedSimple({ model: null }), [{
+			description: 'Should return 400 if model is not defined',
+			request: { data: defaultRequestData },
+			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_NOT_DEFINED } }
+		}]);
+
+		APITest(apiExtendedSimple({ model: 'model' }), [{
+			description: 'Should return 400 if model is not a Class',
+			request: { data: defaultRequestData },
+			response: { code: 400, body: { message: SlsApiFileRelationError.messages.MODEL_IS_NOT_MODEL_CLASS } }
+		}]);
 
 		APITest(apiExtendedSimple(), [{
 			description: 'Should return 400 if entityIdField is not defined',
