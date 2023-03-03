@@ -9,9 +9,14 @@ const { SlsApiFileDelete, SlsApiFileDeleteError } = require('../lib/index');
 describe('SlsApiFileDelete', () => {
 
 	const apiExtendedSimple = ({
-		entityIdField
+		entityIdField,
+		model = BaseModel
 	} = {}) => {
 		class API extends SlsApiFileDelete {
+
+			get model() {
+				return model;
+			}
 
 			get entityIdField() {
 				return entityIdField;
@@ -45,6 +50,16 @@ describe('SlsApiFileDelete', () => {
 	};
 
 	context('Validate', () => {
+
+		APITest(apiExtendedSimple({ model: null }), [{
+			description: 'Should return 400 if model is not defined',
+			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_NOT_DEFINED } }
+		}]);
+
+		APITest(apiExtendedSimple({ model: 'model' }), [{
+			description: 'Should return 400 if model is not a Class',
+			response: { code: 400, body: { message: SlsApiFileDeleteError.messages.MODEL_IS_NOT_MODEL_CLASS } }
+		}]);
 
 		APITest(apiExtendedSimple(), [{
 			description: 'Should return 400 if entityIdField is not defined',
