@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.0.0] - 2023-02-27
+### Fixed
+- Now you have to declare the model in `delete` and `relation` Apis to avoid errors saving the relationship
+
 ## [3.2.0] - 2023-01-23
 ### Added
 - New property `fileName` it make retro compatible the api get credentials

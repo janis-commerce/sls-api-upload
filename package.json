@@ -22,7 +22,7 @@
     "@janiscommerce/api-test": "^4.3.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-import": "^2.27.5",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
@@ -36,13 +36,11 @@
   },
   "dependencies": {
     "@janiscommerce/api": "^6.5.1",
-    "@janiscommerce/api-get": "^4.1.0",
-    "@janiscommerce/api-list": "^5.3.2",
-    "@janiscommerce/lambda": "^5.0.5",
+    "@janiscommerce/api-get": "^4.2.0",
+    "@janiscommerce/api-list": "^5.8.0",
+    "@janiscommerce/lambda": "^6.0.0",
     "@janiscommerce/model": "^6.5.2",
-    "@janiscommerce/s3": "^1.4.1",
     "@janiscommerce/superstruct": "^1.2.1",
-    "aws-sdk": "^2.1295.0",
     "lllog": "^1.1.2"
   }
 }
