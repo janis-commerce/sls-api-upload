@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.0.1] - 2023-03-10
+### Changed
+- Update dependency `@janiscommerce/lambda` to version `6.0.1`
+
 ## [4.0.0] - 2023-02-27
 ### Fixed
 - Now you have to declare the model in `delete` and `relation` Apis to avoid errors saving the relationship
