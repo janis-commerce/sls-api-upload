@@ -26,7 +26,7 @@
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "sinon": "^15.0.1"
+    "sinon": "^15.0.2"
   },
   "files": [
     "lib/"
@@ -38,7 +38,7 @@
     "@janiscommerce/api": "^6.5.1",
     "@janiscommerce/api-get": "^4.2.0",
     "@janiscommerce/api-list": "^5.8.0",
-    "@janiscommerce/lambda": "^6.0.1",
+    "@janiscommerce/lambda": "^6.0.2",
     "@janiscommerce/model": "^6.5.2",
     "@janiscommerce/superstruct": "^1.2.1",
     "lllog": "^1.1.2"
