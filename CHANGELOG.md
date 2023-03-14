@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.0.2] - 2023-03-14
+### Fixed
+- Fix getting info when saving the relationship with the file
+
 ## [4.0.1] - 2023-03-10
 ### Changed
 - Update dependency `@janiscommerce/lambda` to version `6.0.1`
