@@ -9,7 +9,7 @@ const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 const EXPIRATION_FILE_OPTIONS = {
 	oneDay: 1,
 	tenDays: 10,
-	monthly: 30,
+	month: 30,
 	never: 'never'
 };
 
