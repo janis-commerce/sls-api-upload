@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [4.1.0] - 2023-03-31
+### Added
+- New getter option `fileExpiration` on api `getCredentials` and `fileRelation`. It will be use to determinate del expiration of the file.
+- New index in BaseModel to expire files after specific time
+
 ## [4.0.3] - 2023-03-14
 ### Fixed
 - Update dependency `@janiscommerce/lambda` to version `6.0.2`

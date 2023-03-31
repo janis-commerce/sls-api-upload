@@ -168,7 +168,7 @@ get entity() {
 
 *Optional*
 
-Allows you to set a custom expiration for the file.  
+Allows you to set a custom expiration for the file.
 **Possible values**: `oneDay` | `tendays` | `month` | `never`
 
 ```js
@@ -296,13 +296,15 @@ This API has the following required request data:
 
 - **filename**: (string) The name and extension of the file.
 - **filesSource**: (string) The full key of the file stored in S3.
+- **fileExpiration**: (string) The expiration of the file stored in S3.
 
 #### Request data example
 
 ```json
 {
 	"fileName": "front-image.png",
-	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png"
+	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png",
+	"fileExpiration": "month"
 }
 ```
 
@@ -374,7 +376,7 @@ Request data example;
 
 *Optional*
 
-Allows you to set a custom expiration for the file.  
+Allows you to set a custom expiration for the file.
 **Possible values**: `oneDay` | `tendays` | `month` | `never`
 
 ```js

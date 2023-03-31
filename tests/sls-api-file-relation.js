@@ -54,8 +54,8 @@ describe('SlsApiRelation', () => {
 			return postSaveHook();
 		}
 
-		format(additonalData) {
-			return format(additonalData);
+		format(additionalData) {
+			return format(additionalData);
 		}
 	};
 
@@ -262,13 +262,13 @@ describe('SlsApiRelation', () => {
 					});
 				}
 			},
-			...Object.keys(EXPIRATION_FILE_OPTIONS).map(expiration => ({
-				description: `Should return 200 and valid data when expiration ${expiration} is set`,
+			...Object.keys(EXPIRATION_FILE_OPTIONS).map(fileExpiration => ({
+				description: `Should return 200 and valid data when fileExpiration ${fileExpiration} is set`,
 				session: true,
 				request: {
 					data: {
 						...defaultRequestData,
-						expiration
+						fileExpiration
 					},
 					pathParameters: [1]
 				},
@@ -287,7 +287,7 @@ describe('SlsApiRelation', () => {
 						mimeType: 'image/png',
 						type: 'image',
 						size: 10000,
-						...expiration !== 'never' && { expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[expiration]) }
+						...fileExpiration !== 'never' && { expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[fileExpiration]) }
 					});
 				}
 			}))
