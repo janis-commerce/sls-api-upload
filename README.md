@@ -164,6 +164,19 @@ get entity() {
 }
 ```
 
+#### get fileExpiration()
+
+*Optional*
+
+Allows you to set a custom expiration for the file.  
+**Possible values**: `oneDay` | `tendays` | `month` | `never`
+
+```js
+get fileExpiration() {
+	return 'oneDay';
+}
+```
+
 ### Request Data
 
 This API has the following required request data:
@@ -354,6 +367,19 @@ Request data example;
 	"fileName": "image.png",
 	"fileSource": "files/images/1f368ddd-97b6-4076-ba63-9e0a71273aac.png",
 	"myRelationshipCustomField": "theValue"
+}
+```
+
+#### get fileExpiration()
+
+*Optional*
+
+Allows you to set a custom expiration for the file.  
+**Possible values**: `oneDay` | `tendays` | `month` | `never`
+
+```js
+get fileExpiration() {
+	return 'oneDay';
 }
 ```
 

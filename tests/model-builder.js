@@ -10,6 +10,18 @@ describe('Base Model', () => {
 		assert.strictEqual(BaseModel.table, 'files');
 	});
 
+	it('Should return the indexes', () => {
+		assert.deepStrictEqual(BaseModel.indexes, [
+			{
+				name: 'expiration',
+				key: {
+					expireAt: 1
+				},
+				expireAfterSeconds: 0
+			}
+		]);
+	});
+
 	it('Should allow to override the table', () => {
 
 		class ModelTest extends BaseModel {

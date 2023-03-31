@@ -6,6 +6,15 @@ const { Invoker } = require('@janiscommerce/lambda');
 const BaseModel = require('../lib/base-model');
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 
+const EXPIRATION_FILE_OPTIONS = {
+	oneDay: 1,
+	tenDays: 10,
+	month: 30,
+	never: 'never'
+};
+
+const DEFAULT_EXPIRATION_FILE = 'tenDays';
+
 describe('SlsApiRelation', () => {
 
 	const apiExtendedSimple = ({
@@ -50,6 +59,8 @@ describe('SlsApiRelation', () => {
 		}
 	};
 
+	const fakeDate = new Date();
+
 	const path = 'cdn/files/defaultClient/a87a83d3-f494-4069-a0f7-fa0894590072.png';
 	const defaultRequestData = { fileName: 'test.png', fileSource: path };
 
@@ -62,6 +73,14 @@ describe('SlsApiRelation', () => {
 			ContentType: 'image/png',
 			Metadata: {}
 		}
+	};
+
+	const buildExpirationDate = days => {
+
+		const expireDate = new Date(fakeDate);
+		expireDate.setDate(expireDate.getDate() + days);
+
+		return expireDate;
 	};
 
 	context('Validate', () => {
@@ -174,6 +193,7 @@ describe('SlsApiRelation', () => {
 				},
 				response: { code: 201 },
 				before: sandbox => {
+					sandbox.useFakeTimers(fakeDate);
 					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({});
 					sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 				},
@@ -185,7 +205,8 @@ describe('SlsApiRelation', () => {
 						name: 'test.png',
 						mimeType: null,
 						type: 'other',
-						size: null
+						size: null,
+						expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 					});
 				}
 			},
@@ -198,6 +219,7 @@ describe('SlsApiRelation', () => {
 				},
 				response: { code: 500 },
 				before: sandbox => {
+					sandbox.useFakeTimers(fakeDate);
 					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 					sandbox.stub(BaseModel.prototype, 'insert').rejects();
 				},
@@ -209,7 +231,8 @@ describe('SlsApiRelation', () => {
 						name: 'test.png',
 						mimeType: 'image/png',
 						type: 'image',
-						size: 10000
+						size: 10000,
+						expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 					});
 				}
 			},
@@ -222,6 +245,7 @@ describe('SlsApiRelation', () => {
 				},
 				response: { code: 201, body: { id: 12345 } },
 				before: sandbox => {
+					sandbox.useFakeTimers(fakeDate);
 					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 					sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 				},
@@ -233,10 +257,40 @@ describe('SlsApiRelation', () => {
 						name: 'test.png',
 						mimeType: 'image/png',
 						type: 'image',
-						size: 10000
+						size: 10000,
+						expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 					});
 				}
-			}
+			},
+			...Object.keys(EXPIRATION_FILE_OPTIONS).map(expiration => ({
+				description: `Should return 200 and valid data when expiration ${expiration} is set`,
+				session: true,
+				request: {
+					data: {
+						...defaultRequestData,
+						expiration
+					},
+					pathParameters: [1]
+				},
+				response: { code: 201, body: { id: 12345 } },
+				before: sandbox => {
+					sandbox.useFakeTimers(fakeDate);
+					sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
+					sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
+				},
+				after: (afterResponse, sandbox) => {
+					sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetFilesInfo', 'defaultClient', { paths: [path] });
+					sandbox.assert.calledWithExactly(BaseModel.prototype.insert, {
+						test: 1,
+						path,
+						name: 'test.png',
+						mimeType: 'image/png',
+						type: 'image',
+						size: 10000,
+						...expiration !== 'never' && { expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[expiration]) }
+					});
+				}
+			}))
 		]);
 
 		APITest(apiExtendedSimple({
@@ -258,6 +312,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
+				sandbox.useFakeTimers(fakeDate);
 				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
@@ -270,6 +325,7 @@ describe('SlsApiRelation', () => {
 					mimeType: 'image/png',
 					type: 'image',
 					size: 10000,
+					expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE]),
 					description: 'test description',
 					order: 1
 				});
@@ -287,6 +343,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
+				sandbox.useFakeTimers(fakeDate);
 				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
@@ -298,7 +355,8 @@ describe('SlsApiRelation', () => {
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
-					size: 10000
+					size: 10000,
+					expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 				});
 			}
 		}]);
@@ -314,6 +372,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 500 },
 			before: sandbox => {
+				sandbox.useFakeTimers(fakeDate);
 				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
@@ -325,7 +384,8 @@ describe('SlsApiRelation', () => {
 					name: 'test.png',
 					mimeType: 'image/png',
 					type: 'image',
-					size: 10000
+					size: 10000,
+					expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 				});
 			}
 		}]);
@@ -361,6 +421,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
+				sandbox.useFakeTimers(fakeDate);
 				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({ statusCode: 200, payload: fileInfo });
 				sandbox.stub(BaseModel.prototype, 'insert').resolves(12345);
 			},
@@ -373,6 +434,7 @@ describe('SlsApiRelation', () => {
 					mimeType: 'image/png',
 					type: 'image',
 					size: 10000,
+					expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE]),
 					order: 1
 				});
 			}
@@ -406,6 +468,7 @@ describe('SlsApiRelation', () => {
 			},
 			response: { code: 201, body: { id: 12345 } },
 			before: sandbox => {
+				sandbox.useFakeTimers(fakeDate);
 				sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({
 					statusCode: 200,
 					payload: {
@@ -427,7 +490,8 @@ describe('SlsApiRelation', () => {
 					name: `test${extension}`,
 					mimeType: ContentType,
 					type,
-					size: 10000
+					size: 10000,
+					expireAt: buildExpirationDate(EXPIRATION_FILE_OPTIONS[DEFAULT_EXPIRATION_FILE])
 				});
 			}
 		})));
