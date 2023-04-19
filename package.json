@@ -19,14 +19,14 @@
   "license": "ISC",
   "homepage": "https://github.com/janis-commerce/sls-api-upload.git#readme",
   "devDependencies": {
-    "@janiscommerce/api-test": "^4.3.0",
+    "@janiscommerce/api-test": "^5.0.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.27.5",
     "husky": "^8.0.3",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "sinon": "^15.0.2"
+    "sinon": "^15.0.3"
   },
   "files": [
     "lib/"
@@ -35,11 +35,11 @@
     "test": "tests"
   },
   "dependencies": {
-    "@janiscommerce/api": "^6.5.1",
-    "@janiscommerce/api-get": "^4.2.0",
-    "@janiscommerce/api-list": "^5.8.0",
+    "@janiscommerce/api": "^7.0.0",
+    "@janiscommerce/api-get": "^5.0.0",
+    "@janiscommerce/api-list": "^6.0.0",
     "@janiscommerce/lambda": "^6.0.2",
-    "@janiscommerce/model": "^6.5.2",
+    "@janiscommerce/model": "^7.0.0",
     "@janiscommerce/superstruct": "^1.2.1",
     "lllog": "^1.1.2"
   }
