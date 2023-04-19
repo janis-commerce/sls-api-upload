@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.0.0] - 2023-04-19
+### Changed
+- Update [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api) to version 7xx
+- Update [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get) to version 5xx
+- Update [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list) to version 6xx
+- Update [@janiscommerce/api-test](https://www.npmjs.com/package/@janiscommerce/api-test) to version 5xx
+- Update [@janiscommerce/model](https://www.npmjs.com/package/@janiscommerce/model) to version 7xx
+
 ## [4.1.0] - 2023-03-31
 ### Added
 - New getter option `fileExpiration` on api `getCredentials` and `fileRelation`. It will be use to determinate del expiration of the file.
