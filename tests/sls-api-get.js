@@ -178,7 +178,7 @@ describe('SlsApiFileGet', () => {
 						filters: { entity: '1', id: '2' }, limit: 1, page: 1
 					});
 
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			},
 			{
@@ -199,7 +199,7 @@ describe('SlsApiFileGet', () => {
 						filters: { entity: '1', id: '2' }, limit: 1, page: 1
 					});
 
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			}
 		]);
@@ -221,7 +221,7 @@ describe('SlsApiFileGet', () => {
 						filters: { entity: '1', id: '2' }, limit: 1, page: 1
 					});
 
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			}
 		]);
@@ -245,7 +245,7 @@ describe('SlsApiFileGet', () => {
 						filters: { entity: '1', id: '2' }, limit: 1, page: 1
 					});
 
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			}
 		]);
@@ -269,7 +269,7 @@ describe('SlsApiFileGet', () => {
 						filters: { entity: '1', id: '2' }, limit: 1, page: 1
 					});
 
-					sandbox.assert.calledWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			}
 		]);

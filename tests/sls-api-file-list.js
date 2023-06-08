@@ -332,7 +332,7 @@ describe('File List Api', () => {
 						page: 1
 					});
 
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			},
 			{
@@ -354,7 +354,7 @@ describe('File List Api', () => {
 						page: 1
 					});
 
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			},
 			{
@@ -382,7 +382,7 @@ describe('File List Api', () => {
 						page: 1
 					});
 
-					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, 'getObject', bucketParams);
+					sandbox.assert.calledOnceWithExactly(S3.getSignedUrl, bucketParams);
 				}
 			},
 			{
