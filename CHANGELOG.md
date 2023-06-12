@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [2.1.3-aws-sdk-v3] - 2023-06-12
+## [2.1.6-aws-sdk-v3] - 2023-06-12
 ### Fixed
 - `SlsApiUpload` used correctly `createPresignedPost` function
 
