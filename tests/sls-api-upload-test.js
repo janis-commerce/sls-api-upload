@@ -206,9 +206,7 @@ describe('SlsApiUpload', () => {
 				response: { code: 200 },
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-						Fields: {
-							key: globalSandbox.match(new RegExp(`^${uuidRgx}`))
-						}
+						Key: globalSandbox.match(new RegExp(`^${uuidRgx}`))
 					});
 				}
 			},
@@ -273,9 +271,7 @@ describe('SlsApiUpload', () => {
 				response: { code: 200 },
 				after: (afterResponse, sandbox) => {
 					sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-						Fields: {
-							key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
-						}
+						Key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
 					});
 				}
 			}
@@ -299,9 +295,7 @@ describe('SlsApiUpload', () => {
 			response: { code: 200 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
-					}
+					Key: globalSandbox.match(new RegExp(`^files/${uuidRgx}`))
 				});
 			}
 		}]);
@@ -312,9 +306,7 @@ describe('SlsApiUpload', () => {
 			response: { code: 200 },
 			after: (afterResponse, sandbox) => {
 				sandbox.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: globalSandbox.match(new RegExp(`^files/images/${uuidRgx}`))
-					}
+					Key: globalSandbox.match(new RegExp(`^files/images/${uuidRgx}`))
 				});
 			}
 		}]);
