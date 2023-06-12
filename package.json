@@ -1,6 +1,6 @@
 {
   "name": "@janiscommerce/sls-api-upload",
-  "version": "2.1.5-sls3",
+  "version": "2.1.6-aws-sdk-v3",
   "description": "A package for managing Uploads to S3",
   "main": "lib/index.js",
   "scripts": {
