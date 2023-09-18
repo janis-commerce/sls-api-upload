@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.0] - 2023-09-18
+### Changed
+- Update [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api) to version 8xx
+- Update [@janiscommerce/api-get](https://www.npmjs.com/package/@janiscommerce/api-get) to version 6xx
+- Update [@janiscommerce/api-list](https://www.npmjs.com/package/@janiscommerce/api-list) to version 7xx
+- Update [@janiscommerce/api-test](https://www.npmjs.com/package/@janiscommerce/api-test) to version 6xx
+- Update [@janiscommerce/model](https://www.npmjs.com/package/@janiscommerce/model) to version 8xx
+
 ## [5.0.0] - 2023-04-19
 ### Changed
 - Update [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api) to version 7xx
