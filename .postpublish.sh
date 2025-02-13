@@ -20,7 +20,7 @@ PACKAGE_VERSION=$(cat package.json \
 
 curl -s -X POST -H 'content-type: application/json' -d "
 	{
-		\"username\": \"Model\",
+		\"username\": \"sls-api-upload\",
 		\"icon_url\":\"https://static.janis.in/microservices-v2-logos/janis.png\",
 		\"text\": \":package: Versión $PACKAGE_VERSION publicada. <https://github.com/janis-commerce/sls-api-upload/blob/master/CHANGELOG.md|[CHANGELOG]>\"
 	}" $SLACK_WEBHOOK
