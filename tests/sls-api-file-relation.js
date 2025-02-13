@@ -1,9 +1,12 @@
+/* eslint-disable max-classes-per-file */
+
 'use strict';
 
 const APITest = require('@janiscommerce/api-test');
 const { Invoker } = require('@janiscommerce/lambda');
 
 const BaseModel = require('../lib/base-model');
+
 const { SlsApiFileRelation, SlsApiFileRelationError } = require('../lib/index');
 
 const EXPIRATION_FILE_OPTIONS = {
