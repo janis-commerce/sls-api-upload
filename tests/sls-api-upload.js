@@ -209,9 +209,7 @@ describe('SlsApiUpload', () => {
 				response: { code: 200 },
 				after: (afterResponse, sinon) => {
 					sinon.assert.calledWithMatch(S3.createPresignedPost, {
-						Fields: {
-							key: globalSinon.match(new RegExp(`^${uuidRgx}`))
-						}
+						Key: globalSinon.match(new RegExp(`^${uuidRgx}`))
 					});
 				}
 			},
@@ -276,9 +274,7 @@ describe('SlsApiUpload', () => {
 				response: { code: 200 },
 				after: (afterResponse, sinon) => {
 					sinon.assert.calledWithMatch(S3.createPresignedPost, {
-						Fields: {
-							key: globalSinon.match(new RegExp(`^files/${uuidRgx}`))
-						}
+						Key: globalSinon.match(new RegExp(`^files/${uuidRgx}`))
 					});
 				}
 			}
@@ -302,9 +298,7 @@ describe('SlsApiUpload', () => {
 			response: { code: 200 },
 			after: (afterResponse, sinon) => {
 				sinon.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: globalSinon.match(new RegExp(`^files/${uuidRgx}`))
-					}
+					Key: globalSinon.match(new RegExp(`^files/${uuidRgx}`))
 				});
 			}
 		}]);
@@ -315,9 +309,7 @@ describe('SlsApiUpload', () => {
 			response: { code: 200 },
 			after: (afterResponse, sinon) => {
 				sinon.assert.calledWithMatch(S3.createPresignedPost, {
-					Fields: {
-						key: globalSinon.match(new RegExp(`^files/images/${uuidRgx}`))
-					}
+					Key: globalSinon.match(new RegExp(`^files/images/${uuidRgx}`))
 				});
 			}
 		}]);

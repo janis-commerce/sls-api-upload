@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.1] - 2024-02-13
+### Fixes
+- **SlsApiUpload** fixed s3-presigned-post Key param
+
 ## [6.1.0] - 2024-02-13
 ### Added
 - Reintroduced support for using a _custom_ **S3 Bucket** alongside the **Storage** service
