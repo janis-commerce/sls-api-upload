@@ -15,6 +15,22 @@ npm install @janiscommerce/sls-api-upload
 ### ENV variables
 **`JANIS_SERVICE_NAME`** (required): The name of the service that will be use to create the path when saving the file into the S3 through the Storage Microservice.
 
+### Own bucket usage
+
+For Own Bucket usage is required to add the following configuration.
+
+#### get bucket()
+
+*Required*
+
+This getter must be used in all APIs to indicate the bucket where files are uploaded, listed, retrieved individually, or deleted.
+
+```js
+get bucket() {
+	return 'bucket-name';
+}
+```
+
 ## Content
 
 In this package, you can found several modules to create APIs to manage files, uploads, delete or get them.
@@ -29,6 +45,9 @@ In this package, you can found several modules to create APIs to manage files, u
 	* [SLS-API-Get](#SlsApiFileGet)
 * API for **Delete** Files
 	* [SLS-API-Delete](#SlsApiFileDelete)
+* APIs for **Upload** and **Save** Files
+	* [SLS-API-Upload](#SlsApiUpload) (Own bucket exclusive)
+	* [SLS-API-File-Relation](#SlsApiFileRelation)
 
 Every Module can be customize.
 
@@ -710,5 +729,159 @@ This hooks is async and execute after delete the document from S3 Bucket. You ca
 	]
 ]
 ```
+
+</details>
+
+
+
+## SlsApiUpload
+
+<details>
+	<summary>This Module allows you to create an API to get a valid pre-signed URL and headers in order to upload a file to a S3 Bucket (Own Bucket exclusive).</summary>
+
+> This Class extends from [@janiscommerce/api](https://www.npmjs.com/package/@janiscommerce/api)
+
+:warning: **IMPORTANT**: When you get the response you can use it to make the request with the file.
+
+If you want to see more about it:
+* [AWS preSigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
+* [Upload an Image using Postman and S3 preSigned URL](https://medium.com/@lakshmanLD/upload-file-to-s3-using-lambda-the-pre-signed-url-way-158f074cda6c), see Step 2.
+
+### API Example
+
+```js
+// in src/api/item/file-upload/list.js
+'use strict';
+
+const { SlsApiUpload } = require('@janiscommerce/sls-api-upload');
+
+module.exports = class MyApiUpload extends SlsApiUpload {
+	get bucket() {
+		return 'bucket-name';
+	}
+
+	get path() {
+		return 'files/';
+	}
+
+	get availableTypes() {
+		return ['application/pdf']
+	}
+
+	get expiration() {
+		return 300;
+	}
+
+	get sizeRange() {
+		return [1, 1024 * 1024 * 5]; // 1byte - 5mb
+	}
+};
+
+```
+
+### Request Example
+
+```js
+{
+	fileName: 'my-file.jpg'
+}
+```
+
+### Response Example
+
+```js
+{
+	url: 'https://s3.amazonaws.com/bucket-name',
+	fields: {
+		'Content-Type': 'image/jpg',
+		key: 'files/06311e0c-6f32-4a13-93e4-c89a7765e571.jpg',
+		bucket: 'bucket-name',
+		'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+		'X-Amz-Credential': 'AAAAAAA99BB0BOCCCCCC/10000000/us-east-2/s3/aws4_request',
+		'X-Amz-Date': '20200406T185857Z',
+		Policy: 'eyJleHBpcmF0aW9uIjoiMjAyMC0wNC0wNlQxODo1OTo1N1oiLCJjb25kaXRpb25zIjpbWyJjb250ZW5=',
+		'X-Amz-Signature': '4e99b9e991df4aa4370e88aa3390000d1a543527fcc1cdb6583b193aed00bf00'
+	}
+}
+```
+
+### Getters
+
+The following getters can be used to customize and validate your `SlsApiUpload`.
+
+
+#### get bucket()
+
+*Required*
+
+This is used to indicate the bucket where the file should be saved
+
+```js
+get bucket() {
+	return 'bucket-name';
+}
+```
+
+#### get path()
+
+*Optional*
+
+*Default*: `""`
+
+This is used to indicate the path where the file should be saved
+
+```js
+get path() {
+	return 'files/pdf/';
+}
+```
+
+#### get availableTypes()
+
+*Optional*
+
+*Default*: `[]`
+
+This is used to indicate the accepted file types to be uploaded. If you not define them, all types will be valid. Example:
+
+```js
+get availableTypes() {
+	return ['image/jpg', 'image/jpeg', 'image/png']
+}
+```
+
+#### get expiration()
+
+*Optional*
+
+*Default*: `60`
+
+This is used to indicate the expiration time in seconds of the generated URL
+
+```js
+get expiration() {
+	return 120;
+}
+```
+
+#### get sizeRange()
+
+*Optional*
+
+*Default*: `[1,10485760] // 1B to 10MB`
+
+This is used to indicate the valid file size range to be uploaded
+
+```js
+get sizeRange() {
+	return [1, 20 * 1024 * 1024]; // 1byte - 20mb
+}
+```
+
+### Hooks
+
+This module has only one Hook:
+
+* [postValidateHook](#Common-Validation)
 
 </details>
