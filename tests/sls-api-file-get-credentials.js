@@ -205,14 +205,17 @@ describe('SlsApiFileGetCredentials', () => {
 					response: { code: 500 },
 					before: sandbox => {
 						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({
-							statusCode: 400,
-							errorType: 'StorageError',
-							errorMessage: 'Some error',
-							trace: [
-								'StorageError: Some error',
-								'at getCredentials...',
-								'at process...'
-							]
+							statusCode: 200,
+							functionError: 'Unhandled',
+							payload: {
+								errorType: 'StorageError',
+								errorMessage: 'Some error',
+								trace: [
+									'StorageError: Some error',
+									'at getCredentials...',
+									'at process...'
+								]
+							}
 						});
 					},
 					after: (afterResponse, sandbox) => {
