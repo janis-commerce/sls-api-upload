@@ -202,7 +202,12 @@ describe('SlsApiFileGetCredentials', () => {
 							fileNames: ['image.png']
 						}
 					},
-					response: { code: 500 },
+					response: {
+						code: 500,
+						body: {
+							message: 'Fail getting credentials: Some error'
+						}
+					},
 					before: sandbox => {
 						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({
 							statusCode: 200,
