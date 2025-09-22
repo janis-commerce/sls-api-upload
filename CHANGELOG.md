@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.4] - 2025-09-22
+### Fixed
+- **SlsApiFileGetCredentials** Added the original error message from Storage service when it fails
+
 ## [6.1.3] - 2025-09-22
 ### Fixed
 - **SlsApiFileGetCredentials** Fixed error handling when Storage service fails (but invoke does not reject) - Proper error handling
