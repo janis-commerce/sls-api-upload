@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.2] - 2025-09-22
+### Fixed
+- **SlsApiFileGetCredentials** Fixed error handling when Storage service fails (but invoke does not reject)
+
 ## [6.1.1] - 2024-02-13
 ### Fixes
 - **SlsApiUpload** fixed s3-presigned-post Key param
