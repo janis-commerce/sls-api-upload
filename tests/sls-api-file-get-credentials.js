@@ -177,7 +177,7 @@ describe('SlsApiFileGetCredentials', () => {
 
 			APITest(defaultApiGetCredentials, 'api/entity/1/file-get-credentials', [
 				{
-					description: 'Should return 500 invoke fails',
+					description: 'Should return 500 if invoke fails',
 					session: true,
 					request: {
 						pathParameters: [1],
@@ -188,6 +188,32 @@ describe('SlsApiFileGetCredentials', () => {
 					response: { code: 500 },
 					before: sandbox => {
 						sandbox.stub(Invoker, 'serviceSafeClientCall').rejects(new Error('some error'));
+					},
+					after: (afterResponse, sandbox) => {
+						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
+					}
+				},
+				{
+					description: 'Should return 500 if invoke returns error message',
+					session: true,
+					request: {
+						pathParameters: [1],
+						data: {
+							fileNames: ['image.png']
+						}
+					},
+					response: { code: 500 },
+					before: sandbox => {
+						sandbox.stub(Invoker, 'serviceSafeClientCall').resolves({
+							statusCode: 400,
+							errorType: 'StorageError',
+							errorMessage: 'Some error',
+							trace: [
+								'StorageError: Some error',
+								'at getCredentials...',
+								'at process...'
+							]
+						});
 					},
 					after: (afterResponse, sandbox) => {
 						sandbox.assert.calledWithExactly(Invoker.serviceSafeClientCall, 'storage', 'GetCredentials', 'defaultClient', requestDataMultiplesFiles);
