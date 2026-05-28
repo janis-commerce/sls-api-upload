@@ -46,5 +46,8 @@
     "@janiscommerce/superstruct": "^1.2.1",
     "lllog": "^1.1.2",
     "mime": "^2.6.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
